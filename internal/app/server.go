@@ -4,9 +4,21 @@ import (
 	"Notification_Preferences/pkg/database"
 	"Notification_Preferences/utils"
 	"log"
+
+	"github.com/joho/godotenv"
 )
 
+func loadEnv() {
+	p := "../../.env"
+	if err := godotenv.Load(p); err == nil {
+		log.Println("Loaded env:", p)
+		return
+	}
+
+	log.Println("⚠️ No env file found, using system env")
+}
 func Start() {
+	loadEnv()
 	// Setup dependencies: database and configuration
 	db, cfg, err := SetupDependencies("dev")
 	if err != nil {

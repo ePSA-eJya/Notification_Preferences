@@ -7,7 +7,6 @@ func ToUserResponse(user *entities.User) *UserResponse {
 	return &UserResponse{
 		ID:    user.ID,
 		Email: user.Email,
-		Name:  user.Name,
 	}
 }
 
@@ -24,6 +23,5 @@ func ToUserEntity(req *RegisterRequest) *entities.User {
 	return &entities.User{
 		Email:    req.Email,
 		Password: req.Password,
-		Name:     req.Name,
 	}
 }

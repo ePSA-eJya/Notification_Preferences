@@ -1,6 +1,9 @@
 package app
 
 import (
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 
 	"Notification_Preferences/pkg/config"
@@ -49,6 +52,8 @@ func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error)
 
 func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	cfg := config.LoadConfig(env)
+
+	log.Println("MONGODB_URI =", os.Getenv("MongoURI"))
 
 	db, err := database.ConnectMongo(cfg.MongoURI, cfg.DBName)
 	if err != nil {

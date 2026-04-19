@@ -140,7 +140,7 @@ func (h *HttpUserHandler) PatchUser(c *fiber.Ctx) error {
 		return responses.ErrorWithMessage(c, err, "invalid request")
 	}
 
-	user := &entities.User{Name: req.Name}
+	user := &entities.User{}
 
 	msg, err := validatePatchUser(user)
 	if err != nil {
@@ -173,10 +173,6 @@ func (h *HttpUserHandler) DeleteUser(c *fiber.Ctx) error {
 }
 
 func validatePatchUser(user *entities.User) (string, error) {
-
-	if user.Name == "" {
-		return "username is invalid", apperror.ErrInvalidData
-	}
 
 	return "", nil
 }
