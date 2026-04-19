@@ -1,0 +1,51 @@
+package entities
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+// --- Custom Types for Delivery Status ---
+
+type DeliveryStatus string
+
+const (
+	StatusDelivered DeliveryStatus = "DELIVERED"
+	StatusSent      DeliveryStatus = "SENT"
+	StatusSkipped   DeliveryStatus = "SKIPPED"
+	StatusFailed    DeliveryStatus = "FAILED"
+)
+
+type ChannelDelivery struct {
+	Status     DeliveryStatus `bson:"status" json:"status"`
+	ReadAt     *time.Time     `bson:"read_at,omitempty" json:"read_at,omitempty"`
+	ProviderID *string        `bson:"provider_id,omitempty" json:"provider_id,omitempty"`
+}
+
+type NotificationChannels struct {
+	InApp ChannelDelivery `bson:"in_app" json:"in_app"`
+	Push  ChannelDelivery `bson:"push" json:"push"`
+	Email ChannelDelivery `bson:"email" json:"email"`
+}
+
+// --- Main Entities ---
+
+type Event struct {
+	ID         uuid.UUID `bson:"_id" json:"id"`
+	ActorID    uuid.UUID `bson:"actor_id" json:"actor_id"`
+	ActionType string    `bson:"action_type" json:"action_type"` // e.g., "COMMENT", "LIKE"
+	EntityID   uuid.UUID `bson:"entity_id" json:"entity_id"`
+	EntityType string    `bson:"entity_type" json:"entity_type"` // e.g., "POST"
+	Payload    string    `bson:"payload" json:"payload"`
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+}
+
+type Notification struct {
+	ID          uuid.UUID            `bson:"_id" json:"id"`
+	RecipientID uuid.UUID            `bson:"recipient_id" json:"recipient_id"`
+	EventID     uuid.UUID            `bson:"event_id" json:"event_id"`
+	Message     string               `bson:"message" json:"message"`
+	Channels    NotificationChannels `bson:"channels" json:"channels"`
+	CreatedAt   time.Time            `bson:"created_at" json:"created_at"`
+}
