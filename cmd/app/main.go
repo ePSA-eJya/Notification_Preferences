@@ -1,7 +1,8 @@
 package main
 
-import "notification-pref/internal/app"
+import "Notification_Preferences/internal/app"
 
 func main() {
+
 	app.Start() // Call server.go
 }

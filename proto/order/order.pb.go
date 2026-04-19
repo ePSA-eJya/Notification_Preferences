@@ -547,7 +547,7 @@ const file_proto_orderpb_order_proto_rawDesc = "" +
 	"\rFindAllOrders\x12\x1b.order.FindAllOrdersRequest\x1a\x1c.order.FindAllOrdersResponse\x12A\n" +
 	"\n" +
 	"PatchOrder\x12\x18.order.PatchOrderRequest\x1a\x19.order.PatchOrderResponse\x12D\n" +
-	"\vDeleteOrder\x12\x19.order.DeleteOrderRequest\x1a\x1a.order.DeleteOrderResponseB3Z1notification-pref/proto/orderpbb\x06proto3"
+	"\vDeleteOrder\x12\x19.order.DeleteOrderRequest\x1a\x1a.order.DeleteOrderResponseB3Z1Notification_Preferences/proto/orderpbb\x06proto3"
 
 var (
 	file_proto_orderpb_order_proto_rawDescOnce sync.Once

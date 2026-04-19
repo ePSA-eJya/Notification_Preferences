@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"notification-pref/pkg/config"
+	"Notification_Preferences/pkg/config"
 
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/grpc"

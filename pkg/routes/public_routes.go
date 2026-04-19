@@ -2,29 +2,19 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
-
-	// Order
-	orderHandler "notification-pref/internal/order/handler/rest"
-	orderRepository "notification-pref/internal/order/repository"
-	orderUseCase "notification-pref/internal/order/usecase"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	// User
-	userHandler "notification-pref/internal/user/handler/rest"
-	userRepository "notification-pref/internal/user/repository"
-	userUseCase "notification-pref/internal/user/usecase"
+	userHandler "Notification_Preferences/internal/user/handler/rest"
+	userRepository "Notification_Preferences/internal/user/repository"
+	userUseCase "Notification_Preferences/internal/user/usecase"
 )
 
-func RegisterPublicRoutes(app fiber.Router, db *gorm.DB) {
+func RegisterPublicRoutes(app fiber.Router, db *mongo.Database) {
 
 	api := app.Group("/api/v1")
 
 	// === Dependency Wiring ===
-
-	// Order
-	orderRepo := orderRepository.NewGormOrderRepository(db)
-	orderService := orderUseCase.NewOrderService(orderRepo)
-	orderHandler := orderHandler.NewHttpOrderHandler(orderService)
 
 	// User
 	userRepo := userRepository.NewGormUserRepository(db)
@@ -45,11 +35,4 @@ func RegisterPublicRoutes(app fiber.Router, db *gorm.DB) {
 	userGroup.Patch("/:id", userHandler.PatchUser)
 	userGroup.Delete("/:id", userHandler.DeleteUser)
 
-	// Order routes
-	orderGroup := api.Group("/orders")
-	orderGroup.Get("/", orderHandler.FindAllOrders)
-	orderGroup.Get("/:id", orderHandler.FindOrderByID)
-	orderGroup.Post("/", orderHandler.CreateOrder)
-	orderGroup.Patch("/:id", orderHandler.PatchOrder)
-	orderGroup.Delete("/:id", orderHandler.DeleteOrder)
 }

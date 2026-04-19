@@ -1,6 +1,6 @@
 package usecase
 
-import "notification-pref/internal/entities"
+import "Notification_Preferences/internal/entities"
 
 type UserUseCase interface {
 	Register(user *entities.User) error

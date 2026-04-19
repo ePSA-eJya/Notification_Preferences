@@ -1,16 +1,16 @@
 package routes
 
 import (
-	userHandler "notification-pref/internal/user/handler/rest"
-	userRepository "notification-pref/internal/user/repository"
-	userUseCase "notification-pref/internal/user/usecase"
-	middleware "notification-pref/pkg/middleware"
+	userHandler "Notification_Preferences/internal/user/handler/rest"
+	userRepository "Notification_Preferences/internal/user/repository"
+	userUseCase "Notification_Preferences/internal/user/usecase"
+	middleware "Notification_Preferences/pkg/middleware"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB) {
+func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database) {
 
 	route := app.Group("/api/v1", middleware.JWTMiddleware())
 

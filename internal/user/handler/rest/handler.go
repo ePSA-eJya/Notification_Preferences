@@ -3,11 +3,12 @@ package handler
 import (
 	"fmt"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/dto"
-	"notification-pref/internal/user/usecase"
-	"notification-pref/pkg/apperror"
-	"notification-pref/pkg/responses"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/dto"
+	"Notification_Preferences/internal/user/usecase"
+	"Notification_Preferences/pkg/apperror"
+	"Notification_Preferences/pkg/responses"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -139,7 +140,7 @@ func (h *HttpUserHandler) PatchUser(c *fiber.Ctx) error {
 		return responses.ErrorWithMessage(c, err, "invalid request")
 	}
 
-	user := &entities.User{Name: req.Name}
+	user := &entities.User{}
 
 	msg, err := validatePatchUser(user)
 	if err != nil {
@@ -172,10 +173,6 @@ func (h *HttpUserHandler) DeleteUser(c *fiber.Ctx) error {
 }
 
 func validatePatchUser(user *entities.User) (string, error) {
-
-	if user.Name == "" {
-		return "username is invalid", apperror.ErrInvalidData
-	}
 
 	return "", nil
 }

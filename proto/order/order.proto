@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package order;
 
-option go_package = "notification-pref/proto/orderpb";
+option go_package = "Notification_Preferences/proto/orderpb";
 
 message Order {
   int32 id = 1;

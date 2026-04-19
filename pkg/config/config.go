@@ -22,16 +22,14 @@ type Config struct {
 
 	JWTSecret     string
 	JWTExpiration int // in seconds
+
+	MongoURI string
+	// DBName   string
 }
 
 func LoadConfig(env string) *Config {
 
-	envFile := ".env"
-	if env != "" {
-		envFile = ".env." + env
-	}
-
-	if err := godotenv.Load(envFile); err != nil {
+	if err := godotenv.Load("../../.env"); err != nil {
 		log.Println("No .env file found, using system env", err)
 	}
 
@@ -47,6 +45,7 @@ func LoadConfig(env string) *Config {
 		DBPassword:    getEnv("DB_PASSWORD", ""),
 		DBName:        getEnv("DB_NAME", "test"),
 		JWTSecret:     getEnv("JWT_SECRET", "changeme"),
+		MongoURI:      getEnv("MongoURI", ""),
 		JWTExpiration: jwtExp,
 	}
 
