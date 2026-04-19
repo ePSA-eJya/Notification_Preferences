@@ -1,4 +1,4 @@
-# notification-pref
+# Notification_Preferences
 <div><img width="600" alt="image" src="https://github.com/user-attachments/assets/5ff920c7-eccf-4fa2-8198-3cf2ec2dae6e" /></div>
 
 **go-clean-template** is a clean and scalable starter template for building backend applications in Go, following Clean Architecture principles. This template uses:
@@ -37,8 +37,8 @@ The script will guide you through renaming the project. For more details, see [d
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/notification-pref.git
-    cd notification-pref
+    git clone https://github.com/Notification_Preferences.git
+    cd Notification_Preferences
     ```
 
 2. Install Go module dependencies:
@@ -146,7 +146,7 @@ The test suite uses the same `.env.dev` file and automatically:
 
 
 ```bash
-/notification-pref
+/Notification_Preferences
 ├── cmd/
 │   └── app/
 │       └── main.go               

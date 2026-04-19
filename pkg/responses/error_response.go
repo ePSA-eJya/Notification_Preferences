@@ -1,7 +1,8 @@
 package responses
 
 import (
-	appError "notification-pref/pkg/apperror"
+	appError "Notification_Preferences/pkg/apperror"
+
 	"github.com/gofiber/fiber/v2"
 )
 

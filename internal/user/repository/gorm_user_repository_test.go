@@ -3,17 +3,19 @@ package repository_test
 import (
 	"testing"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/repository"
-	"notification-pref/pkg/database"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/repository"
+	"Notification_Preferences/pkg/database"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
 type UserRepositoryTestSuite struct {
 	suite.Suite
-	db      *gorm.DB
+	db      *mongo.Database
 	repo    repository.UserRepository
 	cleanup func()
 }

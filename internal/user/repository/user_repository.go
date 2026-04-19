@@ -1,6 +1,6 @@
 package repository
 
-import "notification-pref/internal/entities"
+import "Notification_Preferences/internal/entities"
 
 type UserRepository interface {
 	Save(user *entities.User) error

@@ -3,10 +3,11 @@ package grpc
 import (
 	"context"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/order/usecase"
-	"notification-pref/pkg/apperror"
-	orderpb "notification-pref/proto/order"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/order/usecase"
+	"Notification_Preferences/pkg/apperror"
+	orderpb "Notification_Preferences/proto/order"
+
 	"google.golang.org/grpc/status"
 )
 

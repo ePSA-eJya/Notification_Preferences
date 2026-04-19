@@ -1,6 +1,6 @@
 package dto
 
-import "notification-pref/internal/entities"
+import "Notification_Preferences/internal/entities"
 
 // From entity.User to UserResponse
 func ToUserResponse(user *entities.User) *UserResponse {

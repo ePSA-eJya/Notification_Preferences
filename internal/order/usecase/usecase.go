@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"notification-pref/internal/entities"
-	"notification-pref/internal/order/repository"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/order/repository"
 )
 
 // OrderService

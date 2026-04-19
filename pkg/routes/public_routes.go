@@ -2,20 +2,20 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	// Order
-	orderHandler "notification-pref/internal/order/handler/rest"
-	orderRepository "notification-pref/internal/order/repository"
-	orderUseCase "notification-pref/internal/order/usecase"
+	orderHandler "Notification_Preferences/internal/order/handler/rest"
+	orderRepository "Notification_Preferences/internal/order/repository"
+	orderUseCase "Notification_Preferences/internal/order/usecase"
 
 	// User
-	userHandler "notification-pref/internal/user/handler/rest"
-	userRepository "notification-pref/internal/user/repository"
-	userUseCase "notification-pref/internal/user/usecase"
+	userHandler "Notification_Preferences/internal/user/handler/rest"
+	userRepository "Notification_Preferences/internal/user/repository"
+	userUseCase "Notification_Preferences/internal/user/usecase"
 )
 
-func RegisterPublicRoutes(app fiber.Router, db *gorm.DB) {
+func RegisterPublicRoutes(app fiber.Router, db *mongo.Database) {
 
 	api := app.Group("/api/v1")
 

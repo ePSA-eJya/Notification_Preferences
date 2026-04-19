@@ -1,6 +1,6 @@
 package repository
 
-import "notification-pref/internal/entities"
+import "Notification_Preferences/internal/entities"
 
 type OrderRepository interface {
 	Save(order *entities.Order) error

@@ -3,12 +3,13 @@ package rest
 import (
 	"strconv"
 
-	"notification-pref/pkg/apperror"
+	"Notification_Preferences/pkg/apperror"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/order/dto"
-	"notification-pref/internal/order/usecase"
-	responses "notification-pref/pkg/responses"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/order/dto"
+	"Notification_Preferences/internal/order/usecase"
+	responses "Notification_Preferences/pkg/responses"
+
 	"github.com/gofiber/fiber/v2"
 )
 

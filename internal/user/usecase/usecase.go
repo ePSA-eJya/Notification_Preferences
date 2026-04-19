@@ -4,9 +4,10 @@ import (
 	"os"
 	"time"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/repository"
-	"notification-pref/pkg/apperror"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/repository"
+	"Notification_Preferences/pkg/apperror"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )

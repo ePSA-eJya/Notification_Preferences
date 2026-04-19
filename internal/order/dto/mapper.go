@@ -1,6 +1,6 @@
 package dto
 
-import "notification-pref/internal/entities"
+import "Notification_Preferences/internal/entities"
 
 func ToOrderResponse(order *entities.Order) *OrderResponse {
 	return &OrderResponse{

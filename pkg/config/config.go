@@ -22,6 +22,9 @@ type Config struct {
 
 	JWTSecret     string
 	JWTExpiration int // in seconds
+
+	MongoURI string
+	// DBName   string
 }
 
 func LoadConfig(env string) *Config {

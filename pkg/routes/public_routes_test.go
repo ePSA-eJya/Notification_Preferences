@@ -8,16 +8,16 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 
-	"notification-pref/internal/app"
-	"notification-pref/pkg/config"
-	"notification-pref/pkg/database"
+	"Notification_Preferences/internal/app"
+	"Notification_Preferences/pkg/config"
+	"Notification_Preferences/pkg/database"
 )
 
 type PublicRoutesTestSuite struct {
 	suite.Suite
-	db      *gorm.DB
+	db      *mongo.Database
 	app     *fiber.App
 	cfg     *config.Config
 	cleanup func()

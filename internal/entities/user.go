@@ -2,7 +2,7 @@ package entities
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type User struct {
@@ -12,7 +12,7 @@ type User struct {
 	Name     string    `json:"name"`
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+func (u *User) BeforeCreate(tx *mongo.Database) (err error) {
 	u.ID = uuid.New()
 	return
 }

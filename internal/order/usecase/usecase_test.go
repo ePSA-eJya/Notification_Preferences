@@ -3,17 +3,19 @@ package usecase_test
 import (
 	"testing"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/order/repository"
-	"notification-pref/internal/order/usecase"
-	"notification-pref/pkg/database"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/order/repository"
+	"Notification_Preferences/internal/order/usecase"
+	"Notification_Preferences/pkg/database"
+
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
 type OrderUseCaseTestSuite struct {
 	suite.Suite
-	db      *gorm.DB
+	db      *mongo.Database
 	repo    repository.OrderRepository
 	service usecase.OrderUseCase
 	cleanup func()
