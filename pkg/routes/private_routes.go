@@ -19,5 +19,7 @@ func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database) {
 	userHandler := userHandler.NewHttpUserHandler(userService)
 
 	route.Get("/me", userHandler.GetUser)
+	route.Post("/users/:id/follow", userHandler.FollowUser)
+	route.Delete("/users/:id/follow", userHandler.UnfollowUser)
 
 }
