@@ -2,9 +2,9 @@
 package repository
 
 import (
+	"Notification_Preferences/internal/entities"
 	"context"
 	"errors"
-	"notification-pref/internal/entities"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"

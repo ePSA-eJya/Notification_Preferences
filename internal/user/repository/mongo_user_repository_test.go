@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/repository"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/repository"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

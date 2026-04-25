@@ -1,12 +1,8 @@
 package repository
 
-<<<<<<< HEAD
-import "Notification_Preferences/internal/entities"
-=======
 import (
+	"Notification_Preferences/internal/entities"
 	"context"
-	"notification-pref/internal/entities"
->>>>>>> 3f79743 (Add follow/unfollow flow)
 
 	"github.com/google/uuid"
 )

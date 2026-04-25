@@ -8,9 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/usecase"
-	"notification-pref/pkg/apperror"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/usecase"
+	"Notification_Preferences/pkg/apperror"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"

@@ -10,12 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database) {
+func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database, publisher userUseCase.EventPublisher) {
 
 	route := app.Group("/api/v1", middleware.JWTMiddleware())
 
-	userRepo := userRepository.NewGormUserRepository(db)
-	userService := userUseCase.NewUserService(userRepo)
+	userRepo := userRepository.NewMongoUserRepository(db)
+	userService := userUseCase.NewUserServiceWithPublisher(userRepo, publisher)
 	userHandler := userHandler.NewHttpUserHandler(userService)
 
 	route.Get("/me", userHandler.GetUser)

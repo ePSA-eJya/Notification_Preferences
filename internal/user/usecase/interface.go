@@ -1,15 +1,11 @@
 package usecase
 
-<<<<<<< HEAD
-import "Notification_Preferences/internal/entities"
-=======
 import (
+	"Notification_Preferences/internal/entities"
 	"context"
-	"notification-pref/internal/entities"
 
 	"github.com/google/uuid"
 )
->>>>>>> 3f79743 (Add follow/unfollow flow)
 
 type UserUseCase interface {
 	Register(ctx context.Context, user *entities.User) error

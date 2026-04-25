@@ -3,19 +3,11 @@ package handler
 import (
 	"fmt"
 
-<<<<<<< HEAD
 	"Notification_Preferences/internal/entities"
 	"Notification_Preferences/internal/user/dto"
 	"Notification_Preferences/internal/user/usecase"
 	"Notification_Preferences/pkg/apperror"
 	"Notification_Preferences/pkg/responses"
-=======
-	"notification-pref/internal/entities"
-	"notification-pref/internal/user/dto"
-	"notification-pref/internal/user/usecase"
-	"notification-pref/pkg/apperror"
-	"notification-pref/pkg/responses"
->>>>>>> 3f79743 (Add follow/unfollow flow)
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -117,11 +109,7 @@ func (h *HttpUserHandler) PatchUser(c *fiber.Ctx) error {
 		return responses.ErrorWithMessage(c, err, "invalid request")
 	}
 
-<<<<<<< HEAD
-	user := &entities.User{}
-=======
 	user := &entities.User{UserHandle: req.UserHandle}
->>>>>>> 3f79743 (Add follow/unfollow flow)
 
 	msg, err := validatePatchUser(user)
 	if err != nil {
@@ -151,8 +139,6 @@ func (h *HttpUserHandler) DeleteUser(c *fiber.Ctx) error {
 func (h *HttpUserHandler) FollowUser(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 
-<<<<<<< HEAD
-=======
 	followerIDRaw := c.Locals("user_id")
 	if followerIDRaw == nil {
 		return responses.ErrorWithMessage(c, apperror.ErrUnauthorized, "missing authenticated user")
@@ -213,6 +199,5 @@ func validatePatchUser(user *entities.User) (string, error) {
 	if user.UserHandle == "" {
 		return "username is invalid", apperror.ErrInvalidData
 	}
->>>>>>> 3f79743 (Add follow/unfollow flow)
 	return "", nil
 }

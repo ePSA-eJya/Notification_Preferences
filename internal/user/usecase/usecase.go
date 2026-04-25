@@ -32,7 +32,7 @@ type UserService struct {
 
 // Init UserService
 func NewUserService(repo repository.UserRepository) UserUseCase {
-	return &UserService{repo: repo, eventPublisher: &noopEventPublisher{}}
+	return NewUserServiceWithPublisher(repo, nil)
 }
 
 func NewUserServiceWithPublisher(repo repository.UserRepository, publisher EventPublisher) UserUseCase {
@@ -56,6 +56,7 @@ func (s *UserService) Register(ctx context.Context, user *entities.User) error {
 	}
 
 	user.Password = string(hashedPwd)
+	user.ID = uuid.New() // Nayi unique ID banayega
 	return s.repo.Save(ctx, user)
 }
 
