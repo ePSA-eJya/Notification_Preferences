@@ -3,7 +3,10 @@ package service
 import (
 	"Notification_Preferences/internal/delivery/service"
 	"Notification_Preferences/internal/entities"
-	"Notification_Preferences/internal/notification/repository"
+	followRepo "Notification_Preferences/internal/follow/repository"
+	notifRepo "Notification_Preferences/internal/notification/repository"
+	preferenceRepo "Notification_Preferences/internal/preference/repository"
+	userRepo "Notification_Preferences/internal/user/repository"
 	"context"
 	"log"
 	"time"
@@ -12,15 +15,15 @@ import (
 )
 
 type NotificationServiceImpl struct {
-	repo            repository.NotificationRepository
-	followRepo      repository.FollowRepository
-	userRepo        repository.UserRepository
-	preferenceRepo  repository.PreferenceRepository
+	repo            notifRepo.NotificationRepository
+	followRepo      followRepo.FollowRepository
+	userRepo        userRepo.UserRepository
+	preferenceRepo  preferenceRepo.PreferenceRepository
 	deliveryService service.DeliveryService
 	broker          MessageBroker
 }
 
-func NewNotificationService(repo repository.NotificationRepository, preferenceRepo repository.PreferenceRepository, broker MessageBroker) NotificationService {
+func NewNotificationService(repo notifRepo.NotificationRepository, preferenceRepo preferenceRepo.PreferenceRepository, broker MessageBroker) NotificationService {
 	return &NotificationServiceImpl{repo: repo, preferenceRepo: preferenceRepo, broker: broker}
 }
 
