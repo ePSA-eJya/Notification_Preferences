@@ -152,3 +152,12 @@ func (r *MongoUserRepository) DeleteFollow(ctx context.Context, followerID, foll
 
 	return nil
 }
+func (r *UserRepositoryImpl) GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
+	var user entities.User
+	err := r.collection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return "", err
+	}
+	return user.DeviceToken, nil
+
+}
