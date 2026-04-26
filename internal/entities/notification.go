@@ -15,6 +15,7 @@ const (
 	StatusSent      DeliveryStatus = "SENT"
 	StatusSkipped   DeliveryStatus = "SKIPPED"
 	StatusFailed    DeliveryStatus = "FAILED"
+	StatusPending   DeliveryStatus = "PENDING"
 )
 
 type ChannelDelivery struct {
@@ -30,16 +31,6 @@ type NotificationChannels struct {
 }
 
 // --- Main Entities ---
-
-type Event struct {
-	ID         uuid.UUID `bson:"_id" json:"id"`
-	ActorID    uuid.UUID `bson:"actor_id" json:"actor_id"`
-	ActionType string    `bson:"action_type" json:"action_type"` // e.g., "COMMENT", "LIKE"
-	EntityID   uuid.UUID `bson:"entity_id" json:"entity_id"`
-	EntityType string    `bson:"entity_type" json:"entity_type"` // e.g., "POST"
-	Payload    string    `bson:"payload" json:"payload"`
-	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
-}
 
 type Notification struct {
 	ID          uuid.UUID            `bson:"_id" json:"id"`

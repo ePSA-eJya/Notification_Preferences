@@ -2,6 +2,9 @@ package app
 
 import (
 	"log"
+	"os"
+
+	"github.com/gofiber/fiber/v2"
 
 	"Notification_Preferences/internal/broker"
 	"Notification_Preferences/internal/user/usecase"
@@ -59,7 +62,14 @@ func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error)
 func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	cfg := config.LoadConfig(env)
 
-	log.Println("Mongo config loaded", "uri", cfg.MongoURI, "db", cfg.DBName)
+	// ctx := context.Background()
+
+	// fcmClient, err := config.InitFCM(ctx)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	log.Println("MONGODB_URI =", os.Getenv("MongoURI"))
 
 	db, err := database.ConnectMongo(cfg.MongoURI, cfg.DBName)
 	if err != nil {

@@ -8,11 +8,20 @@ import (
 
 // --- Custom Types for Preferences ---
 
+type ChannelType string
+
+const (
+	InAppChannel ChannelType = "InApp"
+	PushChannel  ChannelType = "Push"
+	EmailChannel ChannelType = "Email"
+)
+
 type PreferenceLevel string
 
 const (
 	PrefAll       PreferenceLevel = "ALL"
 	PrefFollowers PreferenceLevel = "FOLLOWERS"
+	PrefFollowing PreferenceLevel = "FOLLOWING"
 	PrefNone      PreferenceLevel = "NONE"
 )
 
@@ -37,6 +46,7 @@ type User struct {
 	Email       string                  `bson:"email" json:"email"`
 	Password    string                  `bson:"password" json:"-"` // Omitted from JSON responses
 	Preferences NotificationPreferences `bson:"preferences" json:"preferences"`
+	DeviceToken string                  `bson:"device_token"`
 }
 
 func (u *User) Initialize() {
