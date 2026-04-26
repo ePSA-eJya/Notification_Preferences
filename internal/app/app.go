@@ -6,10 +6,14 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"Notification_Preferences/internal/broker"
+	"Notification_Preferences/internal/user/usecase"
 	"Notification_Preferences/pkg/config"
 	"Notification_Preferences/pkg/database"
 	"Notification_Preferences/pkg/middleware"
 	"Notification_Preferences/pkg/routes"
+
+	"github.com/gofiber/fiber/v2"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -29,9 +33,14 @@ import (
 func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error) {
 	app := fiber.New()
 
+	var publisher usecase.EventPublisher
+	if cfg != nil && cfg.KafkaBrokerURL != "" {
+		publisher = broker.NewKafkaProducer(cfg.KafkaBrokerURL, cfg.KafkaEventTopic)
+	}
+
 	middleware.FiberMiddleware(app)
-	routes.RegisterPublicRoutes(app, db)
-	routes.RegisterPrivateRoutes(app, db)
+	routes.RegisterPublicRoutes(app, db, publisher)
+	routes.RegisterPrivateRoutes(app, db, publisher)
 	routes.RegisterNotFoundRoute(app)
 
 	return app, nil

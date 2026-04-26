@@ -10,15 +10,15 @@ import (
 	userUseCase "Notification_Preferences/internal/user/usecase"
 )
 
-func RegisterPublicRoutes(app fiber.Router, db *mongo.Database) {
+func RegisterPublicRoutes(app fiber.Router, db *mongo.Database, publisher userUseCase.EventPublisher) {
 
 	api := app.Group("/api/v1")
 
 	// === Dependency Wiring ===
 
 	// User
-	userRepo := userRepository.NewGormUserRepository(db)
-	userService := userUseCase.NewUserService(userRepo)
+	userRepo := userRepository.NewMongoUserRepository(db)
+	userService := userUseCase.NewUserServiceWithPublisher(userRepo, publisher)
 	userHandler := userHandler.NewHttpUserHandler(userService)
 
 	// === Public Routes ===

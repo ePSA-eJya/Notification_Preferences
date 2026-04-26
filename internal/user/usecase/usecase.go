@@ -1,108 +1,151 @@
 package usecase
 
-// import (
-// 	"os"
-// 	"time"
+import (
+	"context"
+	"os"
+	"time"
 
-// 	"Notification_Preferences/internal/entities"
-// 	"Notification_Preferences/internal/user/repository"
-// 	"Notification_Preferences/pkg/apperror"
+	"Notification_Preferences/internal/entities"
+	"Notification_Preferences/internal/user/repository"
+	"Notification_Preferences/pkg/apperror"
 
-// 	"github.com/golang-jwt/jwt/v5"
-// 	"golang.org/x/crypto/bcrypt"
-// )
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+)
 
-// // UserService struct
-// type UserService struct {
-// 	repo repository.UserRepository
-// }
+type EventPublisher interface {
+	Publish(ctx context.Context, topic string, payload map[string]interface{}) error
+}
 
-// // Init UserService
-// func NewUserService(repo repository.UserRepository) UserUseCase {
-// 	return &UserService{repo: repo}
-// }
+type noopEventPublisher struct{}
 
-// // UserService Methods - 1 Register user (hash password)
-// func (s *UserService) Register(user *entities.User) error {
-// 	existingUser, _ := s.repo.FindByEmail(user.Email)
-// 	if existingUser != nil {
-// 		return apperror.ErrAlreadyExists
-// 	}
+func (n *noopEventPublisher) Publish(_ context.Context, _ string, _ map[string]interface{}) error {
+	return nil
+}
 
-// 	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return err
-// 	}
+// UserService struct
+type UserService struct {
+	repo           repository.UserRepository
+	eventPublisher EventPublisher
+}
 
-// 	user.Password = string(hashedPwd)
+// Init UserService
+func NewUserService(repo repository.UserRepository) UserUseCase {
+	return NewUserServiceWithPublisher(repo, nil)
+}
 
-// 	return s.repo.Save(user)
-// }
+func NewUserServiceWithPublisher(repo repository.UserRepository, publisher EventPublisher) UserUseCase {
+	if publisher == nil {
+		publisher = &noopEventPublisher{}
+	}
 
-// // UserService Methods - 2 Login user (check email + password)
-// func (s *UserService) Login(email string, password string) (string, *entities.User, error) {
-// 	user, err := s.repo.FindByEmail(email)
-// 	if err != nil || user == nil {
-// 		return "", nil, err
-// 	}
+	return &UserService{repo: repo, eventPublisher: publisher}
+}
 
-// 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-// 		return "", nil, err
-// 	}
+// Register user (hash password)
+func (s *UserService) Register(ctx context.Context, user *entities.User) error {
+	existingUser, _ := s.repo.FindByEmail(ctx, user.Email)
+	if existingUser != nil {
+		return apperror.ErrAlreadyExists
+	}
 
-// 	// Generate JWT token
-// 	claims := jwt.MapClaims{
-// 		"user_id": user.ID,
-// 		"exp":     time.Now().Add(time.Hour * 72).Unix(), // 3 days
-// 	}
+	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 
-// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-// 	secret := os.Getenv("JWT_SECRET")
-// 	tokenString, err := token.SignedString([]byte(secret))
-// 	if err != nil {
-// 		return "", nil, err
-// 	}
+	user.Password = string(hashedPwd)
+	user.ID = uuid.New() // Nayi unique ID banayega
+	return s.repo.Save(ctx, user)
+}
 
-// 	return tokenString, user, nil
-// }
+// Login user (check email + password)
+func (s *UserService) Login(ctx context.Context, email, password string) (string, *entities.User, error) {
+	user, err := s.repo.FindByEmail(ctx, email)
+	if err != nil || user == nil {
+		return "", nil, err
+	}
 
-// // UserService Methods - 3 Get user by id
-// func (s *UserService) FindUserByID(id string) (*entities.User, error) {
-// 	return s.repo.FindByID(id)
-// }
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return "", nil, err
+	}
 
-// // UserService Methods - 4 Get all users
-// func (s *UserService) FindAllUsers() ([]*entities.User, error) {
-// 	users, err := s.repo.FindAll()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return users, nil
-// }
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(72 * time.Hour).Unix(),
+	}
 
-// // UserService Methods - 5 Get user by email
-// func (s *UserService) GetUserByEmail(email string) (*entities.User, error) {
-// 	user, err := s.repo.FindByEmail(email)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return user, nil
-// }
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secret := os.Getenv("JWT_SECRET")
 
-// // UserService Methods - 6 Patch
-// func (s *UserService) PatchUser(id string, user *entities.User) (*entities.User, error) {
-// 	if err := s.repo.Patch(id, user); err != nil {
-// 		return nil, err
-// 	}
-// 	updatedUser, _ := s.repo.FindByID(id)
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", nil, err
+	}
 
-// 	return updatedUser, nil
-// }
+	return tokenString, user, nil
+}
 
-// // UserService Methods - 7 Delete
-// func (s *UserService) DeleteUser(id string) error {
-// 	if err := s.repo.Delete(id); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (s *UserService) FindUserByID(ctx context.Context, id string) (*entities.User, error) {
+	return s.repo.FindByID(ctx, id)
+}
+
+func (s *UserService) FindAllUsers(ctx context.Context) ([]*entities.User, error) {
+	return s.repo.FindAll(ctx)
+}
+
+func (s *UserService) PatchUser(ctx context.Context, id string, user *entities.User) (*entities.User, error) {
+	if err := s.repo.Patch(ctx, id, user); err != nil {
+		return nil, err
+	}
+
+	updatedUser, _ := s.repo.FindByID(ctx, id)
+	return updatedUser, nil
+}
+
+func (s *UserService) DeleteUser(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *UserService) FollowUser(ctx context.Context, followerID, followeeID uuid.UUID) error {
+	if followerID == followeeID {
+		return apperror.ErrInvalidData
+	}
+
+	isFollowing, err := s.repo.IsFollowing(ctx, followerID, followeeID)
+	if err != nil {
+		return err
+	}
+	if isFollowing {
+		return apperror.ErrAlreadyExists
+	}
+
+	newFollow := &entities.Follow{
+		ID:         uuid.New(),
+		FollowerID: followerID,
+		FolloweeID: followeeID,
+		CreatedAt:  time.Now().UTC(),
+	}
+
+	if err := s.repo.CreateFollow(ctx, newFollow); err != nil {
+		return err
+	}
+
+	eventPayload := map[string]interface{}{
+		"action_type": "FOLLOW",
+		"actor_id":    followerID.String(),
+		"entity_id":   followeeID.String(),
+		"entity_type": "USER",
+	}
+
+	return s.eventPublisher.Publish(ctx, "social_events", eventPayload)
+}
+
+func (s *UserService) UnfollowUser(ctx context.Context, followerID, followeeID uuid.UUID) error {
+	if followerID == followeeID {
+		return apperror.ErrInvalidData
+	}
+
+	return s.repo.DeleteFollow(ctx, followerID, followeeID)
+}

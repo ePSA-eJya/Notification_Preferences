@@ -1,5 +1,3 @@
-module Notification_Preferences
-
 go 1.25.0
 
 require (
@@ -9,9 +7,10 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/swag v1.16.4
-	google.golang.org/protobuf v1.36.11
+	golang.org/x/crypto v0.38.0
+	google.golang.org/protobuf v1.36.5
 	gorm.io/gorm v1.26.1
 )
 
@@ -67,6 +66,8 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

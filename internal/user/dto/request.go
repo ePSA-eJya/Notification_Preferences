@@ -1,9 +1,9 @@
 package dto
 
 type RegisterRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Name     string `json:"name" validate:"required"`
+	Email      string `json:"email" validate:"required,email"`
+	Password   string `json:"password" validate:"required,min=6"`
+	UserHandle string `json:"user_handle" validate:"required"`
 }
 
 type LoginRequest struct {
@@ -12,5 +12,5 @@ type LoginRequest struct {
 }
 
 type PatchUserRequest struct {
-	Name string `json:"name" validate:"required"`
+	UserHandle string `json:"user_handle" validate:"required"`
 }

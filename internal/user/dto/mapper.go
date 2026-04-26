@@ -5,8 +5,9 @@ import "Notification_Preferences/internal/entities"
 // From entity.User to UserResponse
 func ToUserResponse(user *entities.User) *UserResponse {
 	return &UserResponse{
-		ID:    user.ID,
-		Email: user.Email,
+		ID:         user.ID,
+		Email:      user.Email,
+		UserHandle: user.UserHandle,
 	}
 }
 
@@ -21,7 +22,8 @@ func ToUserResponseList(users []*entities.User) []*UserResponse {
 // From RegisterRequest to entity.User (optional, if want to use in usecase)
 func ToUserEntity(req *RegisterRequest) *entities.User {
 	return &entities.User{
-		Email:    req.Email,
-		Password: req.Password,
+		Email:      req.Email,
+		Password:   req.Password,
+		UserHandle: req.UserHandle,
 	}
 }
