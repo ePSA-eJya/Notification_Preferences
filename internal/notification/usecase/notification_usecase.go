@@ -1,13 +1,14 @@
-package service
+package usecase
 
 import (
-	"Notification_Preferences/internal/delivery/service"
+	"Notification_Preferences/internal/delivery/usecase"
 	"Notification_Preferences/internal/entities"
 	followRepo "Notification_Preferences/internal/follow/repository"
 	notifRepo "Notification_Preferences/internal/notification/repository"
 	preferenceRepo "Notification_Preferences/internal/preference/repository"
 	userRepo "Notification_Preferences/internal/user/repository"
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -19,15 +20,20 @@ type NotificationServiceImpl struct {
 	followRepo      followRepo.FollowRepository
 	userRepo        userRepo.UserRepository
 	preferenceRepo  preferenceRepo.PreferenceRepository
-	deliveryService service.DeliveryService
-	broker          MessageBroker
+	deliveryService usecase.DeliveryService
 }
 
-func NewNotificationService(repo notifRepo.NotificationRepository, preferenceRepo preferenceRepo.PreferenceRepository, broker MessageBroker) NotificationService {
-	return &NotificationServiceImpl{repo: repo, preferenceRepo: preferenceRepo, broker: broker}
+func NewNotificationService(repo notifRepo.NotificationRepository, followRepo followRepo.FollowRepository, userRepo userRepo.UserRepository, preferenceRepo preferenceRepo.PreferenceRepository, deliveryService usecase.DeliveryService) NotificationService {
+	return &NotificationServiceImpl{
+		repo:            repo,
+		followRepo:      followRepo,
+		userRepo:        userRepo,
+		preferenceRepo:  preferenceRepo,
+		deliveryService: deliveryService,
+	}
 }
 
-func (s *NotificationServiceImpl) FormatMessage(event *entities.Event) (string, err) {
+func (s *NotificationServiceImpl) FormatMessage(ctx context.Context, event *entities.Event) (string, error) {
 	actorName, err := s.userRepo.GetNameByUserID(ctx, event.ActorID)
 	if err != nil {
 		log.Printf("failed to fetch actor name for userID=%s", event.ActorID)
@@ -36,16 +42,16 @@ func (s *NotificationServiceImpl) FormatMessage(event *entities.Event) (string, 
 
 	var message string
 	switch event.ActionType {
-	case "POST":
-		message = "%s published a new post.", actorName
-	case "LIKE":
-		message = "%s liked your post.", actorName
-	case "COMMENT":
-		message = "%s commented on your post.", actorName
-	case "FOLLOW":
-		message = "%s started following you.", actorName
+	case entities.Posted:
+		message = fmt.Sprintf("%s published a new post.", actorName)
+	case entities.Liked:
+		message = fmt.Sprintf("%s liked your post.", actorName)
+	case entities.Commented:
+		message = fmt.Sprintf("%s commented on your post.", actorName)
+	case entities.Followed:
+		message = fmt.Sprintf("%s started following you.", actorName)
 	default:
-		message = "New activity from %s.", actorName
+		message = fmt.Sprintf("New activity from %s.", actorName)
 	}
 
 	return message, nil
@@ -58,8 +64,8 @@ func (s *NotificationServiceImpl) GetInitialStatus(enabled bool, targetStatus en
 	return targetStatus
 }
 
-func (s *NotificationServiceImpl) CreateNotification(event *entities.Event, recipientID uuid.UUID, enabledChannels map[entities.ChannelType]bool) (*entities.Notification, error) {
-	message, err := s.FormatMessage(event)
+func (s *NotificationServiceImpl) CreateNotification(ctx context.Context, event *entities.Event, recipientID uuid.UUID, enabledChannels map[entities.ChannelType]bool) (*entities.Notification, error) {
+	message, err := s.FormatMessage(ctx, event)
 	if err != nil {
 		log.Printf("failed to format message: %v", err)
 		return nil, err
@@ -157,7 +163,7 @@ func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *ent
 	// }
 	// s.broker.Publish(entities.EmailQueue, emailPayload)
 	var message string
-	s.deliveryService.SendGmail(ctx, notificationID, email, "New Activity on Your Account", message)
+	s.deliveryService.SendGmail(ctx, notificationID, []string{email}, "New Activity on Your Account", message)
 }
 
 // GetActionPrefs extracts the channel settings for a specific action type from the user's full preferences.
@@ -236,7 +242,7 @@ func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entit
 			entities.PushChannel:  s.ShouldNotify(recipientID, event.ActorID, actionPrefs.Push),
 		}
 
-		notification, err := s.CreateNotification(event, recipientID, enabledChannels)
+		notification, err := s.CreateNotification(ctx, event, recipientID, enabledChannels)
 		dbErr := s.repo.Create(ctx, notification)
 		if dbErr != nil {
 			log.Printf("failed to save notification: %v", err)

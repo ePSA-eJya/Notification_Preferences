@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"Notification_Preferences/internal/entities"

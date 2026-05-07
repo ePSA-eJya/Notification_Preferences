@@ -111,7 +111,7 @@ func (r *MongoFeedRepository) GetUserTimeline(ctx context.Context, userID uuid.U
 		findOpts.SetSkip(int64(offset))
 	}
 	// return newest first
-	findOpts.SetSort(bson.D{{"created_at", -1}})
+	findOpts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	cursor, err := r.feedCollection.Find(ctx, filter, findOpts)
 	if err != nil {

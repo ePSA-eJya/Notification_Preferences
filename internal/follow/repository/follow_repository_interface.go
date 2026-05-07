@@ -7,5 +7,5 @@ import (
 )
 
 type FollowRepository interface {
-	IsFollowing(ctx context.Context, recipientID *uuid.UUID, actorID *uuid.UUID) (bool, error)
+	IsFollowing(ctx context.Context, recipientID uuid.UUID, actorID uuid.UUID) (bool, error)
 }

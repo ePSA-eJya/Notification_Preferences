@@ -180,6 +180,39 @@ func (r *inMemoryUserRepository) GetFollowers(_ context.Context, followeeID uuid
 	return ids, nil
 }
 
+func (r *inMemoryUserRepository) GetDeviceTokenByUserID(_ context.Context, userID uuid.UUID) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	user, ok := r.users[userID]
+	if !ok {
+		return "", errors.New("user not found")
+	}
+	return user.DeviceToken, nil
+}
+
+func (r *inMemoryUserRepository) GetNameByUserID(_ context.Context, userID uuid.UUID) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	user, ok := r.users[userID]
+	if !ok {
+		return "", errors.New("user not found")
+	}
+	return user.UserHandle, nil
+}
+
+func (r *inMemoryUserRepository) GetEmailByUserID(_ context.Context, userID uuid.UUID) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	user, ok := r.users[userID]
+	if !ok {
+		return "", errors.New("user not found")
+	}
+	return user.Email, nil
+}
+
 type testPublisher struct {
 	topic   string
 	payload map[string]interface{}

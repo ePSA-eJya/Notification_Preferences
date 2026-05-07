@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"Notification_Preferences/internal/entities"
@@ -61,19 +61,19 @@ func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID,
 	err := smtp.SendMail(s.smtpHost+":"+s.smtpPort, auth, s.email, recipientEmail, msg)
 	if err != nil {
 		log.Printf("failed to send email for notifID=%s", notifID)
-		dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusFailed, "")
+		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
 		return dbErr
 	}
 
 	providerID := "smtp"
-	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusDelivered, providerID)
+	dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusDelivered, providerID)
 	return dbErr
 }
 
 func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, deviceToken string, message string) error {
 	if deviceToken == "" {
 		log.Printf("device token is empty for notifID=%s", notifID)
-		dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusSkipped, "")
+		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusSkipped, "")
 		return dbErr
 	}
 
@@ -92,12 +92,12 @@ func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, 
 
 	if err != nil {
 		log.Printf("failed to send push notification for notifID=%s", notifID)
-		dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusFailed, "")
+		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
 		return dbErr
 	}
 	log.Printf("Successfully sent message: %s", response)
 
 	providerID := response
-	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusDelivered, providerID)
+	dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusDelivered, providerID)
 	return dbErr
 }
