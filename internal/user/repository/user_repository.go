@@ -18,4 +18,6 @@ type UserRepository interface {
 	IsFollowing(ctx context.Context, followerID, followeeID uuid.UUID) (bool, error)
 	CreateFollow(ctx context.Context, follow *entities.Follow) error
 	DeleteFollow(ctx context.Context, followerID, followeeID uuid.UUID) error
+	// GetFollowers returns a list of follower IDs for a given user (followee)
+	GetFollowers(ctx context.Context, followeeID uuid.UUID) ([]uuid.UUID, error)
 }

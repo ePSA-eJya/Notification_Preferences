@@ -167,6 +167,19 @@ func (r *inMemoryUserRepository) DeleteFollow(_ context.Context, followerID, fol
 	return nil
 }
 
+func (r *inMemoryUserRepository) GetFollowers(_ context.Context, followeeID uuid.UUID) ([]uuid.UUID, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	ids := make([]uuid.UUID, 0)
+	for _, f := range r.follows {
+		if f.FolloweeID == followeeID {
+			ids = append(ids, f.FollowerID)
+		}
+	}
+	return ids, nil
+}
+
 type testPublisher struct {
 	topic   string
 	payload map[string]interface{}

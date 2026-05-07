@@ -152,3 +152,23 @@ func (r *MongoUserRepository) DeleteFollow(ctx context.Context, followerID, foll
 
 	return nil
 }
+
+func (r *MongoUserRepository) GetFollowers(ctx context.Context, followeeID uuid.UUID) ([]uuid.UUID, error) {
+	filter := bson.M{"followee_id": followeeID}
+	cursor, err := r.followCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var follows []entities.Follow
+	if err = cursor.All(ctx, &follows); err != nil {
+		return nil, err
+	}
+
+	ids := make([]uuid.UUID, 0, len(follows))
+	for _, f := range follows {
+		ids = append(ids, f.FollowerID)
+	}
+	return ids, nil
+}

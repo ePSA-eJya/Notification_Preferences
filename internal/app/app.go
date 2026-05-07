@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"Notification_Preferences/internal/broker"
-	"Notification_Preferences/internal/user/usecase"
 	"Notification_Preferences/pkg/config"
 	"Notification_Preferences/pkg/database"
 	"Notification_Preferences/pkg/middleware"
@@ -30,14 +29,16 @@ import (
 func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error) {
 	app := fiber.New()
 
-	var publisher usecase.EventPublisher
+	var publisher *broker.KafkaProducer
+	eventTopic := ""
 	if cfg != nil && cfg.KafkaBrokerURL != "" {
 		publisher = broker.NewKafkaProducer(cfg.KafkaBrokerURL, cfg.KafkaEventTopic)
+		eventTopic = cfg.KafkaEventTopic
 	}
 
 	middleware.FiberMiddleware(app)
 	routes.RegisterPublicRoutes(app, db, publisher)
-	routes.RegisterPrivateRoutes(app, db, publisher)
+	routes.RegisterPrivateRoutes(app, db, publisher, eventTopic)
 	routes.RegisterNotFoundRoute(app)
 
 	return app, nil
