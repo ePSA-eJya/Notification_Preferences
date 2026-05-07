@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -25,34 +26,56 @@ type Config struct {
 	MongoURI        string
 	KafkaBrokerURL  string
 	KafkaEventTopic string
+	SMTP            SMTPConfig
+
 	// DBName   string
 }
 
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	Email    string
+	Password string
+}
+
 func LoadConfig(env string) *Config {
+
 	if err := godotenv.Load("../../.env"); err != nil {
 		log.Println("No .env file found, using system env", err)
 	}
 
-	mongoURI := getFirstEnv(
-		[]string{"MONGO_URI", "MONGODB_URI", "MongoURI"},
-		"mongodb://localhost:27017",
-	)
+	jwtExp := getEnvAsInt("JWT_EXPIRATION", 3600)
 
-	dbName := getFirstEnv(
-		[]string{"MONGO_DB_NAME", "MONGODB_DATABASE", "DB_NAME"},
-		"notification_pref",
-	)
-
-	return &Config{
+	cfg := &Config{
 		AppPort:         getEnv("APP_PORT", "8000"),
+		GrpcPort:        getEnv("GRPC_PORT", "50052"),
 		AppEnv:          getEnv("APP_ENV", "development"),
+		DBHost:          getEnv("DB_HOST", "localhost"),
+		DBPort:          getEnv("DB_PORT", "5432"),
+		DBUser:          getEnv("DB_USER", "postgres"),
+		DBPassword:      getEnv("DB_PASSWORD", ""),
+		DBName:          getEnv("DB_NAME", "test"),
 		JWTSecret:       getEnv("JWT_SECRET", "changeme"),
-		JWTExpiration:   getEnvAsInt("JWT_EXPIRATION", 3600),
-		MongoURI:        mongoURI,
-		DBName:          dbName,
+		MongoURI:        getEnv("MongoURI", ""),
 		KafkaBrokerURL:  getEnv("KAFKA_BROKER_URL", "localhost:9092"),
 		KafkaEventTopic: getEnv("KAFKA_EVENT_TOPIC", "social_events"),
+
+		JWTExpiration: jwtExp,
+
+		SMTP: SMTPConfig{
+			Host:     getEnv("SMTP_HOST", ""),
+			Port:     getEnv("SMTP_PORT", ""),
+			Email:    getEnv("SMTP_EMAIL", ""),
+			Password: getEnv("SMTP_PASSWORD", ""),
+		},
 	}
+
+	cfg.DatabaseDSN = fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+	)
+
+	return cfg
 }
 
 func getEnv(key, fallback string) string {

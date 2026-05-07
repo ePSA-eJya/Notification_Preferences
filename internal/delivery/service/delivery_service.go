@@ -66,17 +66,11 @@ func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID,
 	}
 
 	providerID := "smtp"
-	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusSent, providerID)
+	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusDelivered, providerID)
 	return dbErr
 }
 
 func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, deviceToken string, message string) error {
-	// deviceToken, err := s.repo.GetDeviceTokenByUserID(ctx, recipientID)
-	// if err != nil {
-	// 	// s.repo.UpdateStatus(ctx, notifID, "push", "FAILED", nil)
-	// 	return fmt.Errorf("failed to get device token: %v", err)
-	// }
-
 	if deviceToken == "" {
 		log.Printf("device token is empty for notifID=%s", notifID)
 		dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusSkipped, "")
@@ -104,6 +98,6 @@ func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, 
 	log.Printf("Successfully sent message: %s", response)
 
 	providerID := response
-	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusSent, providerID)
+	dbErr := s.notificationRepo.UpdateStatusByID(ctx, notifID, entities.StatusDelivered, providerID)
 	return dbErr
 }

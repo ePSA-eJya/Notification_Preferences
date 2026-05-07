@@ -152,6 +152,7 @@ func (r *MongoUserRepository) DeleteFollow(ctx context.Context, followerID, foll
 
 	return nil
 }
+<<<<<<< HEAD
 
 func (r *MongoUserRepository) GetFollowers(ctx context.Context, followeeID uuid.UUID) ([]uuid.UUID, error) {
 	filter := bson.M{"followee_id": followeeID}
@@ -171,4 +172,14 @@ func (r *MongoUserRepository) GetFollowers(ctx context.Context, followeeID uuid.
 		ids = append(ids, f.FollowerID)
 	}
 	return ids, nil
+=======
+func (r *UserRepositoryImpl) GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
+	var user entities.User
+	err := r.collection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return "", err
+	}
+	return user.DeviceToken, nil
+
+>>>>>>> 2c7f8b9fa7648eb89e638f82588c97a935598892
 }

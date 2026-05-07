@@ -18,6 +18,10 @@ type UserRepository interface {
 	IsFollowing(ctx context.Context, followerID, followeeID uuid.UUID) (bool, error)
 	CreateFollow(ctx context.Context, follow *entities.Follow) error
 	DeleteFollow(ctx context.Context, followerID, followeeID uuid.UUID) error
+<<<<<<< HEAD
 	// GetFollowers returns a list of follower IDs for a given user (followee)
 	GetFollowers(ctx context.Context, followeeID uuid.UUID) ([]uuid.UUID, error)
+=======
+	GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error)
+>>>>>>> 2c7f8b9fa7648eb89e638f82588c97a935598892
 }
