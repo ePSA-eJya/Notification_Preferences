@@ -18,8 +18,6 @@
 # Vendor directory (if you use vendoring)
 /vendor/
 
-# Go modules files (can be committed or ignored; usually commit go.mod and go.sum)
-/go.sum
 
 # IDE/editor settings
 .vscode/
@@ -55,3 +53,18 @@ coverage.out
 
 # If using build cache directories
 # /pkg/
+# Node/React/Frontend Logs & Cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.vite/
+.turbo/
+
+# React Environment variables (Standard for frontend)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+node_modules/
