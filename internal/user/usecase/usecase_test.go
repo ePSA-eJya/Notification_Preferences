@@ -215,11 +215,11 @@ func (r *inMemoryUserRepository) GetEmailByUserID(_ context.Context, userID uuid
 
 type testPublisher struct {
 	topic   string
-	payload map[string]interface{}
+	payload interface{}
 	err     error
 }
 
-func (p *testPublisher) Publish(_ context.Context, topic string, payload map[string]interface{}) error {
+func (p *testPublisher) Publish(_ context.Context, topic string, payload interface{}) error {
 	p.topic = topic
 	p.payload = payload
 	return p.err
@@ -436,10 +436,12 @@ func (s *UserUseCaseTestSuite) TestFollowUser() {
 	s.NoError(err)
 	s.True(isFollowing)
 	s.Equal("social_events", s.publisher.topic)
-	s.Equal("FOLLOW", s.publisher.payload["action_type"])
-	s.Equal(followerID.String(), s.publisher.payload["actor_id"])
-	s.Equal(followeeID.String(), s.publisher.payload["entity_id"])
-	s.Equal("USER", s.publisher.payload["entity_type"])
+	event, ok := s.publisher.payload.(entities.Event)
+	s.True(ok, "payload should be entities.Event")
+	s.Equal(entities.Followed, event.ActionType)
+	s.Equal(followerID, event.ActorID)
+	s.Equal(followeeID, event.EntityID)
+	s.Equal("USER", event.EntityType)
 }
 
 func (s *UserUseCaseTestSuite) TestFollowUser_CannotFollowSelf() {

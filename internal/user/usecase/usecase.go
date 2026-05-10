@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log"
 	"os"
 	"time"
 
@@ -15,12 +16,12 @@ import (
 )
 
 type EventPublisher interface {
-	Publish(ctx context.Context, topic string, payload map[string]interface{}) error
+	Publish(ctx context.Context, topic string, payload interface{}) error
 }
 
 type noopEventPublisher struct{}
 
-func (n *noopEventPublisher) Publish(_ context.Context, _ string, _ map[string]interface{}) error {
+func (n *noopEventPublisher) Publish(_ context.Context, _ string, _ interface{}) error {
 	return nil
 }
 
@@ -132,14 +133,16 @@ func (s *UserService) FollowUser(ctx context.Context, followerID, followeeID uui
 		return err
 	}
 
-	eventPayload := map[string]interface{}{
-		"action_type": "FOLLOW",
-		"actor_id":    followerID.String(),
-		"entity_id":   followeeID.String(),
-		"entity_type": "USER",
+	event := entities.Event{
+		ID:         uuid.New(),
+		ActorID:    followerID,
+		EntityID:   followeeID,
+		EntityType: "USER",
+		ActionType: entities.Followed,
+		CreatedAt:  time.Now().UTC(),
 	}
-
-	return s.eventPublisher.Publish(ctx, "social_events", eventPayload)
+	log.Printf("Publishing FOLLOW event: %+v", event)
+	return s.eventPublisher.Publish(ctx, "social_events", event)
 }
 
 func (s *UserService) UnfollowUser(ctx context.Context, followerID, followeeID uuid.UUID) error {

@@ -59,13 +59,15 @@ func (s *FeedUsecase) CreatePost(ctx context.Context, post *entities.Post) error
 
 	// Publish event to Kafka
 	if s.publisher != nil {
-		payload := map[string]interface{}{
-			"event":      "POST_CREATED",
-			"post_id":    post.ID.String(),
-			"author_id":  post.UserID.String(),
-			"created_at": post.CreatedAt.Format(time.RFC3339),
+		event := entities.Event{
+			ID:         uuid.New(),
+			ActorID:    post.UserID,
+			EntityID:   post.ID,
+			EntityType: "POST",
+			ActionType: entities.Posted,
+			CreatedAt:  time.Now().UTC(),
 		}
-		_ = s.publisher.Publish(ctx, s.eventTopic, payload)
+		_ = s.publisher.Publish(ctx, s.eventTopic, event)
 	}
 
 	return nil
@@ -82,13 +84,15 @@ func (s *FeedUsecase) LikePost(ctx context.Context, like *entities.Like) error {
 	}
 
 	if s.publisher != nil {
-		payload := map[string]interface{}{
-			"event":      "POST_LIKED",
-			"actor_id":   like.UserID.String(),
-			"post_id":    like.PostID.String(),
-			"created_at": like.CreatedAt.Format(time.RFC3339),
+		event := entities.Event{
+			ID:         uuid.New(),
+			ActorID:    like.UserID,
+			EntityID:   like.PostID,
+			EntityType: "POST",
+			ActionType: entities.Liked,
+			CreatedAt:  time.Now().UTC(),
 		}
-		_ = s.publisher.Publish(ctx, s.eventTopic, payload)
+		_ = s.publisher.Publish(ctx, s.eventTopic, event)
 	}
 	return nil
 }
@@ -104,14 +108,15 @@ func (s *FeedUsecase) CommentOnPost(ctx context.Context, comment *entities.Comme
 	}
 
 	if s.publisher != nil {
-		payload := map[string]interface{}{
-			"event":      "POST_COMMENTED",
-			"actor_id":   comment.UserID.String(),
-			"post_id":    comment.PostID.String(),
-			"comment_id": comment.ID.String(),
-			"created_at": comment.CreatedAt.Format(time.RFC3339),
+		event := entities.Event{
+			ID:         uuid.New(),
+			ActorID:    comment.UserID,
+			EntityID:   comment.PostID,
+			EntityType: "POST",
+			ActionType: entities.Commented,
+			CreatedAt:  time.Now().UTC(),
 		}
-		_ = s.publisher.Publish(ctx, s.eventTopic, payload)
+		_ = s.publisher.Publish(ctx, s.eventTopic, event)
 	}
 	return nil
 }

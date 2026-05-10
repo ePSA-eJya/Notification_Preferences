@@ -21,7 +21,7 @@ func NewKafkaConsumer(brokerURLs []string, topic string, groupID string, notifUs
 		Brokers:  brokerURLs,
 		GroupID:  groupID,
 		Topic:    topic,
-		MinBytes: 10e3, // 10KB
+		MinBytes: 1,    // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
 
@@ -42,32 +42,42 @@ func (c *KafkaConsumer) Start(ctx context.Context) {
 			}
 			return
 		default:
-			msg, err := c.reader.ReadMessage(ctx)
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				log.Printf("Error reading message: %v", err)
-				continue
-			}
-
-			var event map[string]interface{}
-			if err := json.Unmarshal(msg.Value, &event); err != nil {
-				log.Printf("Error unmarshaling event map: %v", err)
-				continue
-			}
-
-			// We need to parse this into entities.Event carefully
-			// Let's just unmarshal into the strict struct directly first
-			var typedEvent entities.Event
-			if err := json.Unmarshal(msg.Value, &typedEvent); err != nil {
-				log.Printf("Error unmarshaling strictly: %v", err)
-			} else {
-				log.Printf("Received Event Action: %s", typedEvent.ActionType)
-				if err := c.notifUseCase.ProcessEvent(ctx, &typedEvent); err != nil {
-					log.Printf("Error processing event: %v", err)
-				}
-			}
+			c.processNextMessage(ctx)
 		}
+	}
+}
+
+func (c *KafkaConsumer) processNextMessage(ctx context.Context) {
+	// Recover from panics so the consumer goroutine doesn't die silently
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("🔴 PANIC in Kafka consumer (recovered): %v", r)
+		}
+	}()
+
+	msg, err := c.reader.ReadMessage(ctx)
+	if err != nil {
+		if ctx.Err() != nil {
+			return
+		}
+		log.Printf("Error reading message: %v", err)
+		return
+	}
+
+	log.Printf("📩 Raw Kafka message: %s", string(msg.Value))
+
+	var typedEvent entities.Event
+	if err := json.Unmarshal(msg.Value, &typedEvent); err != nil {
+		log.Printf("Error unmarshaling event: %v", err)
+		return
+	}
+
+	log.Printf("✅ Parsed Event — Action: %s, ActorID: %s, EntityID: %s, EntityType: %s",
+		typedEvent.ActionType, typedEvent.ActorID, typedEvent.EntityID, typedEvent.EntityType)
+
+	if err := c.notifUseCase.ProcessEvent(ctx, &typedEvent); err != nil {
+		log.Printf("❌ Error processing event: %v", err)
+	} else {
+		log.Printf("✅ Successfully processed %s event", typedEvent.ActionType)
 	}
 }

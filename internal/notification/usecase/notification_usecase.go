@@ -124,45 +124,23 @@ func (s *NotificationServiceImpl) GetRecipientsByActionType(ctx context.Context,
 // }
 // }
 
-func (s *NotificationServiceImpl) SendPushNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID) {
+func (s *NotificationServiceImpl) SendPushNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID, message string) {
 	deviceToken, err := s.userRepo.GetDeviceTokenByUserID(ctx, recipientID)
 	if err != nil || deviceToken == "" {
 		log.Printf("Skipping Push: No token found for user %s", recipientID)
 		return
 	}
 
-	// 3. Publish to the Push Queue
-	// The Delivery Service's SendPush will pick this up
-	// pushPayload := entities.PushPayload{
-	// 	NotificationID: notificationID,
-	// 	DeviceToken:    deviceToken,
-	// 	// Message:        notif.Message,
-	// }
-	// s.broker.Publish(entities.PushQueue, pushPayload)
-	var message string
-
 	s.deliveryService.SendPush(ctx, notificationID, deviceToken, message)
-
 }
 
-func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID) {
-	// 1. Fetch recipient email
+func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID, message string) {
 	email, err := s.userRepo.GetEmailByUserID(ctx, recipientID)
 	if err != nil || email == "" {
 		log.Printf("Skipping Email: No email address for user %s", recipientID)
 		return
 	}
 
-	// 3. Publish to the Email Queue
-	// The Delivery Service's SendGmail will pick this up
-	// emailPayload := entities.EmailPayload{
-	// 	NotificationID: notif.ID,
-	// 	RecipientEmail: []string{email},
-	// 	Subject:        "New Activity on Your Account",
-	// 	Body:           notif.Message,
-	// }
-	// s.broker.Publish(entities.EmailQueue, emailPayload)
-	var message string
 	s.deliveryService.SendGmail(ctx, notificationID, []string{email}, "New Activity on Your Account", message)
 }
 
@@ -218,50 +196,59 @@ func (s *NotificationServiceImpl) ShouldNotify(recipientID uuid.UUID, actorID uu
 // acha toh ham whi notifs bhejenge joh recipient ne allow kr rakhe h
 // i send when i post (to all), like/comment (to author of the post)
 func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entities.Event) error {
-	// action type is fixed --> P,L,C,F
-	// iss user ka iss action k lie recipients kon hai?
+	log.Printf("📨 ProcessEvent started — Action: %s, ActorID: %s", event.ActionType, event.ActorID)
+
 	recipients, recepErr := s.GetRecipientsByActionType(ctx, event)
 	if recepErr != nil {
-		log.Printf("failed to fetch recipients for userID=%s", event.ActorID)
+		log.Printf("failed to fetch recipients for userID=%s: %v", event.ActorID, recepErr)
 		return recepErr
 	}
+	log.Printf("📋 Found %d recipient(s) for %s event", len(recipients), event.ActionType)
 
-	for _, recipientID := range recipients {
-		var prefs entities.NotificationPreferences
-		// this is the recipients ka pref to receive notifs all actions(post/like/comment/follow)
+	for i, recipientID := range recipients {
+		log.Printf("  👤 Processing recipient %d/%d: %s", i+1, len(recipients), recipientID)
+
 		prefs, prefsErr := s.preferenceRepo.GetPreferenceByUserID(ctx, recipientID)
 		if prefsErr != nil {
-			log.Printf("failed to fetch preferences for userID=%s", recipientID)
+			log.Printf("  ❌ failed to fetch preferences for userID=%s: %v", recipientID, prefsErr)
 			continue
 		}
-		//  for this particular action
+		log.Printf("  ✅ Got preferences for %s", recipientID)
+
 		actionPrefs := s.GetActionPrefs(event.ActionType, prefs)
 		enabledChannels := map[entities.ChannelType]bool{
 			entities.InAppChannel: s.ShouldNotify(recipientID, event.ActorID, actionPrefs.InApp),
 			entities.EmailChannel: s.ShouldNotify(recipientID, event.ActorID, actionPrefs.Email),
 			entities.PushChannel:  s.ShouldNotify(recipientID, event.ActorID, actionPrefs.Push),
 		}
+		log.Printf("  📢 Channels — InApp:%v, Email:%v, Push:%v",
+			enabledChannels[entities.InAppChannel],
+			enabledChannels[entities.EmailChannel],
+			enabledChannels[entities.PushChannel])
 
 		notification, err := s.CreateNotification(ctx, event, recipientID, enabledChannels)
-		dbErr := s.repo.Create(ctx, notification)
-		if dbErr != nil {
-			log.Printf("failed to save notification: %v", err)
+		if err != nil {
+			log.Printf("  ❌ failed to create notification: %v", err)
 			continue
 		}
 
-		// if enabledChannels[entities.InAppChannel] {
-		// 	s.SendInAppNotif(event, recipientID) // Persist to Mongo
-		// }
+		dbErr := s.repo.Create(ctx, notification)
+		if dbErr != nil {
+			log.Printf("  ❌ failed to save notification: %v", dbErr)
+			continue
+		}
+		log.Printf("  💾 Notification saved: %s", notification.ID)
 
 		if enabledChannels[entities.PushChannel] {
-			s.SendPushNotif(ctx, event, &notification.ID, recipientID) // Queue for Delivery Service
+			s.SendPushNotif(ctx, event, &notification.ID, recipientID, notification.Message)
 		}
 
 		if enabledChannels[entities.EmailChannel] {
-			s.SendEmailNotif(ctx, event, &notification.ID, recipientID) // Queue for Delivery Service
+			s.SendEmailNotif(ctx, event, &notification.ID, recipientID, notification.Message)
 		}
 
 	}
 
+	log.Printf("✅ ProcessEvent completed for %s event", event.ActionType)
 	return nil
 }

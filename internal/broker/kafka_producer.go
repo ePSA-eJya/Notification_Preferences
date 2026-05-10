@@ -23,8 +23,7 @@ func NewKafkaProducer(brokerURL string, topic string) *KafkaProducer {
 }
 
 // Publish event takes any data and publishes it to kafka
-// ctx context.Context, topic string, payload map[string]interface{}
-func (p *KafkaProducer) Publish(ctx context.Context, topic string, payload map[string]interface{}) error {
+func (p *KafkaProducer) Publish(ctx context.Context, topic string, payload interface{}) error {
 	// 1. Convert the Go Map/Struct into standard JSON format
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
