@@ -152,3 +152,35 @@ func (s *UserService) UnfollowUser(ctx context.Context, followerID, followeeID u
 
 	return s.repo.DeleteFollow(ctx, followerID, followeeID)
 }
+
+func (s *UserService) GetFollowers(ctx context.Context, userID uuid.UUID) ([]*entities.User, error) {
+	ids, err := s.repo.GetFollowers(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	followers := make([]*entities.User, 0, len(ids))
+	for _, id := range ids {
+		user, err := s.repo.FindByID(ctx, id.String())
+		if err == nil {
+			followers = append(followers, user)
+		}
+	}
+	return followers, nil
+}
+
+func (s *UserService) GetFollowing(ctx context.Context, userID uuid.UUID) ([]*entities.User, error) {
+	ids, err := s.repo.GetFollowing(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	following := make([]*entities.User, 0, len(ids))
+	for _, id := range ids {
+		user, err := s.repo.FindByID(ctx, id.String())
+		if err == nil {
+			following = append(following, user)
+		}
+	}
+	return following, nil
+}

@@ -11,10 +11,18 @@ export default function UsersPage() {
   const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
-    usersAPI.getAll()
-      .then((data) => {
-        const list = Array.isArray(data) ? data : [];
+    // Fetch all users and current user's following list
+    Promise.all([
+      usersAPI.getAll(),
+      usersAPI.getFollowing()
+    ])
+      .then(([users, following]) => {
+        const list = Array.isArray(users) ? users : [];
         setUsers(list);
+        
+        // Convert following array to a Set of IDs for O(1) lookup
+        const followingIds = new Set(following?.map(u => u.id) || []);
+        setFollowingSet(followingIds);
       })
       .catch((err) => console.error('Failed to load users:', err))
       .finally(() => setLoading(false));

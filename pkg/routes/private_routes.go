@@ -35,7 +35,7 @@ func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database, publisher *brok
 	followRepo := followRepository.NewMongoFollowRepository(db)
 
 	deliveryService := deliveryUseCase.NewDeliveryService(notifRepo, cfg.SMTP, nil)
-	notifService := notifUseCase.NewNotificationService(notifRepo, followRepo, userRepo, prefRepo, deliveryService)
+	notifService := notifUseCase.NewNotificationService(notifRepo, feedRepo, followRepo, userRepo, prefRepo, deliveryService)
 
 	eventTopic := ""
 	if cfg != nil {
@@ -59,12 +59,17 @@ func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database, publisher *brok
 
 	route.Post("/posts", feedHTTPHandler.CreatePost)
 	route.Post("/posts/:id/like", feedHTTPHandler.LikePost)
+	route.Delete("/posts/:id/like", feedHTTPHandler.UnlikePost)
+	route.Get("/posts/:id/liked", feedHTTPHandler.IsPostLiked)
 	route.Post("/posts/:id/comment", feedHTTPHandler.CommentOnPost)
+	route.Get("/posts/:id/comments", feedHTTPHandler.GetPostComments)
 	route.Get("/feed", feedHTTPHandler.GetFeed)
 
 	route.Get("/me", userHTTPHandler.GetUser)
 	route.Post("/users/:id/follow", userHTTPHandler.FollowUser)
 	route.Delete("/users/:id/follow", userHTTPHandler.UnfollowUser)
+	route.Get("/followers", userHTTPHandler.GetFollowers)
+	route.Get("/following", userHTTPHandler.GetFollowing)
 
 	route.Get("/notifications", notifHTTPHandler.GetNotifications)
 

@@ -16,8 +16,10 @@ type FeedRepository interface {
 	// SaveLike must be idempotent: a user can only like a post once.
 	SaveLike(ctx context.Context, like *entities.Like) error
 	RemoveLike(ctx context.Context, postID, userID uuid.UUID) error
+	IsPostLikedByUser(ctx context.Context, postID, userID uuid.UUID) (bool, error)
 
 	SaveComment(ctx context.Context, comment *entities.Comment) error
+	GetCommentsByPostID(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*entities.Comment, error)
 
 	// AddFeedItems performs a bulk insert (fan-out) of feed items.
 	AddFeedItems(ctx context.Context, items []*entities.FeedItem) error

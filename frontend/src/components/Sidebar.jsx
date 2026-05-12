@@ -5,6 +5,8 @@ const navItems = [
   { path: '/', label: 'Feed', icon: '📰' },
   { path: '/users', label: 'Discover', icon: '👥' },
   { path: '/notifications', label: 'Notifications', icon: '🔔' },
+  { path: '/followers', label: 'Followers', icon: '🫂' },
+  { path: '/following', label: 'Following', icon: '👤' },
   { path: '/preferences', label: 'Preferences', icon: '⚙️' },
 ];
 

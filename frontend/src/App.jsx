@@ -8,6 +8,8 @@ import PreferencesPage from './pages/PreferencesPage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Layout from './components/Layout.jsx';
+import FollowersPage from './pages/FollowersPage.jsx';
+import FollowingPage from './pages/FollowingPage.jsx';
 
 export default function App() {
   const { token, loading } = useAuth();
@@ -57,6 +59,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/followers"
+          element={
+            <ProtectedRoute>
+              <FollowersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/following"
+          element={
+            <ProtectedRoute>
+              <FollowingPage />
             </ProtectedRoute>
           }
         />

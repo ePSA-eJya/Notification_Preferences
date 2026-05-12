@@ -195,6 +195,48 @@ func (h *HttpUserHandler) UnfollowUser(c *fiber.Ctx) error {
 	return responses.Message(c, fiber.StatusOK, "successfully unfollowed user")
 }
 
+func (h *HttpUserHandler) GetFollowers(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	userIDRaw := c.Locals("user_id")
+	if userIDRaw == nil {
+		return responses.ErrorWithMessage(c, apperror.ErrUnauthorized, "missing authenticated user")
+	}
+
+	userID, err := uuid.Parse(fmt.Sprint(userIDRaw))
+	if err != nil {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid user id")
+	}
+
+	followers, err := h.userUseCase.GetFollowers(ctx, userID)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	return c.JSON(dto.ToUserResponseList(followers))
+}
+
+func (h *HttpUserHandler) GetFollowing(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	userIDRaw := c.Locals("user_id")
+	if userIDRaw == nil {
+		return responses.ErrorWithMessage(c, apperror.ErrUnauthorized, "missing authenticated user")
+	}
+
+	userID, err := uuid.Parse(fmt.Sprint(userIDRaw))
+	if err != nil {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid user id")
+	}
+
+	following, err := h.userUseCase.GetFollowing(ctx, userID)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	return c.JSON(dto.ToUserResponseList(following))
+}
+
 func validatePatchUser(user *entities.User) (string, error) {
 	if user.UserHandle == "" {
 		return "username is invalid", apperror.ErrInvalidData

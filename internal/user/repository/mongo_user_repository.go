@@ -172,6 +172,26 @@ func (r *MongoUserRepository) GetFollowers(ctx context.Context, followeeID uuid.
 	return ids, nil
 }
 
+func (r *MongoUserRepository) GetFollowing(ctx context.Context, followerID uuid.UUID) ([]uuid.UUID, error) {
+	filter := bson.M{"follower_id": followerID}
+	cursor, err := r.followCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var follows []entities.Follow
+	if err = cursor.All(ctx, &follows); err != nil {
+		return nil, err
+	}
+
+	ids := make([]uuid.UUID, 0, len(follows))
+	for _, f := range follows {
+		ids = append(ids, f.FolloweeID)
+	}
+	return ids, nil
+}
+
 func (r *MongoUserRepository) GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
 	var user entities.User
 	err := r.collection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)

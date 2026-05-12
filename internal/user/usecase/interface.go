@@ -16,4 +16,6 @@ type UserUseCase interface {
 	DeleteUser(ctx context.Context, id string) error
 	FollowUser(ctx context.Context, followerID, followeeID uuid.UUID) error
 	UnfollowUser(ctx context.Context, followerID, followeeID uuid.UUID) error
+	GetFollowers(ctx context.Context, userID uuid.UUID) ([]*entities.User, error)
+	GetFollowing(ctx context.Context, userID uuid.UUID) ([]*entities.User, error)
 }

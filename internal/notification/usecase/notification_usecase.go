@@ -3,6 +3,7 @@ package usecase
 import (
 	"Notification_Preferences/internal/delivery/usecase"
 	"Notification_Preferences/internal/entities"
+	feedRepo "Notification_Preferences/internal/feed/repository"
 	followRepo "Notification_Preferences/internal/follow/repository"
 	notifRepo "Notification_Preferences/internal/notification/repository"
 	preferenceRepo "Notification_Preferences/internal/preference/repository"
@@ -17,15 +18,17 @@ import (
 
 type NotificationServiceImpl struct {
 	repo            notifRepo.NotificationRepository
+	feedRepo        feedRepo.FeedRepository
 	followRepo      followRepo.FollowRepository
 	userRepo        userRepo.UserRepository
 	preferenceRepo  preferenceRepo.PreferenceRepository
 	deliveryService usecase.DeliveryService
 }
 
-func NewNotificationService(repo notifRepo.NotificationRepository, followRepo followRepo.FollowRepository, userRepo userRepo.UserRepository, preferenceRepo preferenceRepo.PreferenceRepository, deliveryService usecase.DeliveryService) NotificationService {
+func NewNotificationService(repo notifRepo.NotificationRepository, feedRepo feedRepo.FeedRepository, followRepo followRepo.FollowRepository, userRepo userRepo.UserRepository, preferenceRepo preferenceRepo.PreferenceRepository, deliveryService usecase.DeliveryService) NotificationService {
 	return &NotificationServiceImpl{
 		repo:            repo,
+		feedRepo:        feedRepo,
 		followRepo:      followRepo,
 		userRepo:        userRepo,
 		preferenceRepo:  preferenceRepo,
@@ -101,8 +104,13 @@ func (s *NotificationServiceImpl) GetRecipientsByActionType(ctx context.Context,
 	switch event.ActionType {
 
 	case entities.Liked, entities.Commented:
-		// send to owner of post
-		return []uuid.UUID{event.EntityID}, nil
+		// send to owner of post (fetch post by ID to get UserID)
+		post, err := s.feedRepo.GetPostByID(ctx, event.EntityID.String())
+		if err != nil {
+			log.Printf("failed to fetch post %s: %v", event.EntityID, err)
+			return nil, err
+		}
+		return []uuid.UUID{post.UserID}, nil
 
 	case entities.Followed: //send to jisko followed
 		return []uuid.UUID{event.EntityID}, nil

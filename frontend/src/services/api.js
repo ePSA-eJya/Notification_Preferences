@@ -44,6 +44,8 @@ export const usersAPI = {
 
   follow: (userId) => request('POST', `/users/${userId}/follow`),
   unfollow: (userId) => request('DELETE', `/users/${userId}/follow`),
+  getFollowers: () => request('GET', '/followers'),
+  getFollowing: () => request('GET', '/following'),
 };
 
 // ===== Feed / Posts =====
@@ -57,8 +59,17 @@ export const feedAPI = {
   likePost: (postId) =>
     request('POST', `/posts/${postId}/like`),
 
+  unlikePost: (postId) =>
+    request('DELETE', `/posts/${postId}/like`),
+
+  isPostLiked: (postId) =>
+    request('GET', `/posts/${postId}/liked`),
+
   commentOnPost: (postId, text) =>
     request('POST', `/posts/${postId}/comment`, { text }),
+
+  getPostComments: (postId, limit = 50, offset = 0) =>
+    request('GET', `/posts/${postId}/comments?limit=${limit}&offset=${offset}`),
 };
 
 // ===== Preferences =====

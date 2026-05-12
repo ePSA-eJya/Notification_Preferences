@@ -78,12 +78,49 @@ func (r *MongoFeedRepository) RemoveLike(ctx context.Context, postID, userID uui
 	return nil
 }
 
+func (r *MongoFeedRepository) IsPostLikedByUser(ctx context.Context, postID, userID uuid.UUID) (bool, error) {
+	filter := bson.M{"post_id": postID, "user_id": userID}
+	err := r.likeCollection.FindOne(ctx, filter).Err()
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *MongoFeedRepository) SaveComment(ctx context.Context, comment *entities.Comment) error {
 	if comment.ID == uuid.Nil {
 		comment.ID = uuid.New()
 	}
 	_, err := r.commentCollection.InsertOne(ctx, comment)
 	return err
+}
+
+func (r *MongoFeedRepository) GetCommentsByPostID(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*entities.Comment, error) {
+	filter := bson.M{"post_id": postID}
+	findOpts := options.Find()
+	if limit > 0 {
+		findOpts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		findOpts.SetSkip(int64(offset))
+	}
+	findOpts.SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.commentCollection.Find(ctx, filter, findOpts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var comments []*entities.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 func (r *MongoFeedRepository) AddFeedItems(ctx context.Context, items []*entities.FeedItem) error {

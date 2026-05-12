@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { feedAPI } from '../services/api.js';
 
 function timeAgo(dateStr) {
@@ -14,29 +14,81 @@ function timeAgo(dateStr) {
 
 export default function PostCard({ post, currentUserId }) {
   const [liked, setLiked] = useState(false);
-  const [commenting, setCommenting] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(true);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [comments, setComments] = useState(Array.isArray(post.comments) ? post.comments : []);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const initial = (post.user_id || '?')[0]?.toUpperCase();
+  useEffect(() => {
+    setComments(Array.isArray(post.comments) ? post.comments : []);
+  }, [post.id, post.comments]);
+
+  useEffect(() => {
+    if (!showCommentsModal) return;
+
+    let active = true;
+    setCommentsLoading(true);
+
+    feedAPI.getPostComments(post.id)
+      .then((data) => {
+        if (!active) return;
+        setComments(Array.isArray(data?.comments) ? data.comments : []);
+      })
+      .catch((err) => {
+        console.error('Failed to load comments:', err);
+      })
+      .finally(() => {
+        if (active) setCommentsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [showCommentsModal, post.id]);
+
+  // Check if post is already liked by current user
+  useEffect(() => {
+    feedAPI.isPostLiked(post.id)
+      .then((data) => {
+        setLiked(data?.liked || false);
+      })
+      .catch((err) => console.error('Failed to check like status:', err))
+      .finally(() => setLikeLoading(false));
+  }, [post.id]);
 
   const handleLike = async () => {
-    if (liked) return;
-    try {
-      await feedAPI.likePost(post.id);
+    if (liked) {
+      // Unlike
+      setLiked(false);
+      try {
+        await feedAPI.unlikePost(post.id);
+      } catch (err) {
+        setLiked(true);
+        console.error('Unlike failed:', err);
+      }
+    } else {
+      // Like
       setLiked(true);
-    } catch (err) {
-      console.error('Like failed:', err);
+      try {
+        await feedAPI.likePost(post.id);
+      } catch (err) {
+        setLiked(false);
+        console.error('Like failed:', err);
+      }
     }
   };
 
   const handleComment = async () => {
     if (!commentText.trim() || submitting) return;
     setSubmitting(true);
+    const text = commentText.trim();
     try {
-      await feedAPI.commentOnPost(post.id, commentText.trim());
+      await feedAPI.commentOnPost(post.id, text);
+      const data = await feedAPI.getPostComments(post.id);
+      setComments(Array.isArray(data?.comments) ? data.comments : []);
       setCommentText('');
-      setCommenting(false);
     } catch (err) {
       console.error('Comment failed:', err);
     } finally {
@@ -47,9 +99,9 @@ export default function PostCard({ post, currentUserId }) {
   return (
     <div className="post-card fade-in">
       <div className="post-header">
-        <div className="post-avatar">{initial}</div>
+        <div className="post-avatar">{post.user_handle?.[0]?.toUpperCase() || '?'}</div>
         <div>
-          <div className="post-author">{post.user_id?.slice(0, 8) || 'Unknown'}</div>
+          <div className="post-author">@{post.user_handle || 'unknown'}</div>
           <div className="post-time">{timeAgo(post.created_at)}</div>
         </div>
       </div>
@@ -60,33 +112,67 @@ export default function PostCard({ post, currentUserId }) {
         <button
           className={`post-action-btn ${liked ? 'active' : ''}`}
           onClick={handleLike}
+          disabled={likeLoading}
         >
-          {liked ? '❤️' : '🤍'} Like
+          {liked ? '❤️' : '🤍'} {liked ? 'Unlike' : 'Like'}
         </button>
         <button
           className="post-action-btn"
-          onClick={() => setCommenting(!commenting)}
+          onClick={() => setShowCommentsModal(true)}
         >
-          💬 Comment
+          💬 Comments {comments.length > 0 ? `(${comments.length})` : ''}
         </button>
       </div>
 
-      {commenting && (
-        <div className="comment-input-row fade-in">
-          <input
-            className="form-input"
-            placeholder="Write a comment..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleComment()}
-          />
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={handleComment}
-            disabled={submitting || !commentText.trim()}
-          >
-            {submitting ? '...' : 'Send'}
-          </button>
+      {showCommentsModal && (
+        <div className="comments-modal-overlay" onClick={() => setShowCommentsModal(false)}>
+          <div className="comments-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="comments-modal-header">
+              <h3>Comments</h3>
+              <button
+                className="btn btn-ghost btn-sm"
+                type="button"
+                onClick={() => setShowCommentsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="comments-modal-list">
+              {commentsLoading ? (
+                <div className="comments-empty">Loading comments...</div>
+              ) : comments.length === 0 ? (
+                <div className="comments-empty">No comments yet. Be the first one to comment.</div>
+              ) : (
+                comments.map((comment) => (
+                  <div className="comment-item" key={comment.id || `${comment.user_id}-${comment.created_at}`}>
+                    <div className="comment-item-header">
+                      <span className="comment-author">@{comment.user_handle || 'unknown'}</span>
+                      <span className="comment-time">{timeAgo(comment.created_at)}</span>
+                    </div>
+                    <div className="comment-text">{comment.text}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="comment-input-row">
+              <input
+                className="form-input"
+                placeholder="Write a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleComment()}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleComment}
+                disabled={submitting || !commentText.trim()}
+              >
+                {submitting ? '...' : 'Send'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
