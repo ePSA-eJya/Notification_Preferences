@@ -58,16 +58,11 @@ func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error)
 func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	cfg := config.LoadConfig(env)
 
-	// ctx := context.Background()
-
-	// fcmClient, err := config.InitFCM(ctx)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	log.Println("MONGODB_URI =", os.Getenv("MongoURI"))
+	log.Println("db_name =", os.Getenv("DB_NAME"))
 
-	db, err := database.ConnectMongo(cfg.MongoURI, cfg.DBName)
+	db, err := database.ConnectMongo(cfg.MongoURI, cfg.DB_NAME)
+
 	if err != nil {
 		return nil, nil, err
 	}

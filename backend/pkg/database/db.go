@@ -28,7 +28,7 @@ func ConnectMongo(uri string, dbName string) (*mongo.Database, error) {
 	Client = client
 	DB = client.Database(dbName)
 
-	log.Println("✅ MongoDB connected")
+	log.Println("MongoDB connected")
 	return DB, nil
 }
 
@@ -37,7 +37,7 @@ func Close() error {
 	defer cancel()
 
 	if Client != nil {
-		log.Println("🔒 Closing MongoDB connection...")
+		log.Println("Closing MongoDB connection...")
 		return Client.Disconnect(ctx)
 	}
 	return nil
