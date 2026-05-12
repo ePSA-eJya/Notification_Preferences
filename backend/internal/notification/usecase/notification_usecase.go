@@ -124,14 +124,6 @@ func (s *NotificationServiceImpl) GetRecipientsByActionType(ctx context.Context,
 	}
 }
 
-// func (s *NotificationServiceImpl) SendInAppNotif(event *entities.Event, recipientID uuid.UUID) {
-// notification := s.CreateNotification(event, recipientID, entities.InAppChannel)
-// err := s.repo.Create(ctx, notification)
-// if err != nil {
-// 	log.Printf("failed to save in-app notification: %v", err)
-// }
-// }
-
 func (s *NotificationServiceImpl) SendPushNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID, message string) {
 	deviceToken, err := s.userRepo.GetDeviceTokenByUserID(ctx, recipientID)
 	if err != nil || deviceToken == "" {
@@ -149,7 +141,11 @@ func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *ent
 		return
 	}
 
-	s.deliveryService.SendGmail(ctx, notificationID, []string{email}, "New Activity on Your Account", message)
+	subject := "New Activity on Your Account"
+	emailErr := s.deliveryService.SendGmail(ctx, notificationID, []string{email}, subject, message)
+	if emailErr != nil {
+		log.Printf("failed to update email notification status", emailErr)
+	}
 }
 
 // GetActionPrefs extracts the channel settings for a specific action type from the user's full preferences.
@@ -204,24 +200,24 @@ func (s *NotificationServiceImpl) ShouldNotify(recipientID uuid.UUID, actorID uu
 // acha toh ham whi notifs bhejenge joh recipient ne allow kr rakhe h
 // i send when i post (to all), like/comment (to author of the post)
 func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entities.Event) error {
-	log.Printf("📨 ProcessEvent started — Action: %s, ActorID: %s", event.ActionType, event.ActorID)
+	log.Printf("ProcessEvent started — Action: %s, ActorID: %s", event.ActionType, event.ActorID)
 
 	recipients, recepErr := s.GetRecipientsByActionType(ctx, event)
 	if recepErr != nil {
 		log.Printf("failed to fetch recipients for userID=%s: %v", event.ActorID, recepErr)
 		return recepErr
 	}
-	log.Printf("📋 Found %d recipient(s) for %s event", len(recipients), event.ActionType)
+	log.Printf("Found %d recipient(s) for %s event", len(recipients), event.ActionType)
 
 	for i, recipientID := range recipients {
-		log.Printf("  👤 Processing recipient %d/%d: %s", i+1, len(recipients), recipientID)
+		log.Printf("  Processing recipient %d/%d: %s", i+1, len(recipients), recipientID)
 
 		prefs, prefsErr := s.preferenceRepo.GetPreferenceByUserID(ctx, recipientID)
 		if prefsErr != nil {
-			log.Printf("  ❌ failed to fetch preferences for userID=%s: %v", recipientID, prefsErr)
+			log.Printf("  failed to fetch preferences for userID=%s: %v", recipientID, prefsErr)
 			continue
 		}
-		log.Printf("  ✅ Got preferences for %s", recipientID)
+		log.Printf("   Got preferences for %s", recipientID)
 
 		actionPrefs := s.GetActionPrefs(event.ActionType, prefs)
 		enabledChannels := map[entities.ChannelType]bool{
@@ -229,23 +225,23 @@ func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entit
 			entities.EmailChannel: s.ShouldNotify(recipientID, event.ActorID, actionPrefs.Email),
 			entities.PushChannel:  s.ShouldNotify(recipientID, event.ActorID, actionPrefs.Push),
 		}
-		log.Printf("  📢 Channels — InApp:%v, Email:%v, Push:%v",
+		log.Printf("   Channels — InApp:%v, Email:%v, Push:%v",
 			enabledChannels[entities.InAppChannel],
 			enabledChannels[entities.EmailChannel],
 			enabledChannels[entities.PushChannel])
 
 		notification, err := s.CreateNotification(ctx, event, recipientID, enabledChannels)
 		if err != nil {
-			log.Printf("  ❌ failed to create notification: %v", err)
+			log.Printf("  failed to create notification: %v", err)
 			continue
 		}
 
 		dbErr := s.repo.Create(ctx, notification)
 		if dbErr != nil {
-			log.Printf("  ❌ failed to save notification: %v", dbErr)
+			log.Printf("  failed to save notification: %v", dbErr)
 			continue
 		}
-		log.Printf("  💾 Notification saved: %s", notification.ID)
+		log.Printf("  Notification saved: %s", notification.ID)
 
 		if enabledChannels[entities.PushChannel] {
 			s.SendPushNotif(ctx, event, &notification.ID, recipientID, notification.Message)
@@ -257,6 +253,6 @@ func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entit
 
 	}
 
-	log.Printf("✅ ProcessEvent completed for %s event", event.ActionType)
+	log.Printf(" ProcessEvent completed for %s event", event.ActionType)
 	return nil
 }

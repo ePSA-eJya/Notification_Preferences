@@ -38,12 +38,6 @@ func NewDeliveryService(notificationRepo repository.NotificationRepository, conf
 
 func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID, recipientEmail []string, subject, body string) error {
 	auth := smtp.PlainAuth("", s.email, s.password, s.smtpHost)
-	// recipient_email, dberr := s.repo.GetEmailByUserID(ctx, recipientID)
-	// if dberr != nil {
-	// 	log.Printf("failed to fetch recipient email for notifID=%s", notifID)
-	// 	return fmt.Errorf("failed to fetch recipient email: %w", err)
-	// }
-
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\n"+
 			"To: %s\r\n"+
@@ -60,7 +54,7 @@ func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID,
 
 	err := smtp.SendMail(s.smtpHost+":"+s.smtpPort, auth, s.email, recipientEmail, msg)
 	if err != nil {
-		log.Printf("failed to send email for notifID=%s", notifID)
+		log.Printf("failed to send email for notifID=%s", notifID, err)
 		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
 		return dbErr
 	}
