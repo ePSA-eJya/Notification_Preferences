@@ -62,7 +62,7 @@ func (s *UserService) Register(ctx context.Context, user *entities.User) error {
 }
 
 // Login user (check email + password)
-func (s *UserService) Login(ctx context.Context, email, password string) (string, *entities.User, error) {
+func (s *UserService) Login(ctx context.Context, email, password string, deviceToken string) (string, *entities.User, error) {
 	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil || user == nil {
 		return "", nil, err
@@ -83,6 +83,24 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", nil, err
+	}
+
+	alreadyExists := false
+
+	for _, t := range user.DeviceTokens {
+		if t == deviceToken {
+			alreadyExists = true
+			break
+		}
+	}
+
+	if !alreadyExists {
+		user.DeviceTokens = append(user.DeviceTokens, deviceToken)
+
+		err = s.repo.UpdateDeviceToken(ctx, user)
+		if err != nil {
+			return "", nil, err
+		}
 	}
 
 	return tokenString, user, nil

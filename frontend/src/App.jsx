@@ -10,10 +10,14 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Layout from './components/Layout.jsx';
 import FollowersPage from './pages/FollowersPage.jsx';
 import FollowingPage from './pages/FollowingPage.jsx';
+import { useEffect } from 'react';
+import { getDeviceToken, listenMessages } from './firebase.js';
 
 export default function App() {
   const { token, loading } = useAuth();
-
+  useEffect(() => {
+    listenMessages();
+  }, []);
   if (loading) {
     return (
       <div className="loading-spinner" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -21,6 +25,7 @@ export default function App() {
       </div>
     );
   }
+
 
   return (
     <Routes>

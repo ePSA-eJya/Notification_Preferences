@@ -42,6 +42,8 @@ Thumbs.db
 *.tmp
 *.temp
 
+notifpref_firebase.json
+
 # Dependency directories created by dep or other package managers (optional)
 Godeps/
 

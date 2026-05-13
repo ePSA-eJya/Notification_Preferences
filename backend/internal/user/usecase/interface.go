@@ -9,7 +9,7 @@ import (
 
 type UserUseCase interface {
 	Register(ctx context.Context, user *entities.User) error
-	Login(ctx context.Context, email, password string) (string, *entities.User, error)
+	Login(ctx context.Context, email, password string, deviceToken string) (string, *entities.User, error)
 	FindUserByID(ctx context.Context, id string) (*entities.User, error)
 	FindAllUsers(ctx context.Context) ([]*entities.User, error)
 	PatchUser(ctx context.Context, id string, user *entities.User) (*entities.User, error)

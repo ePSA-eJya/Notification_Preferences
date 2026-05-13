@@ -41,12 +41,12 @@ type NotificationPreferences struct {
 // --- Main Entities ---
 
 type User struct {
-	ID          uuid.UUID               `bson:"_id" json:"id"`
-	UserHandle  string                  `bson:"user_handle" json:"user_handle"`
-	Email       string                  `bson:"email" json:"email"`
-	Password    string                  `bson:"password" json:"-"` // Omitted from JSON responses
-	Preferences NotificationPreferences `bson:"preferences" json:"preferences"`
-	DeviceToken string                  `bson:"device_token"`
+	ID           uuid.UUID               `bson:"_id" json:"id"`
+	UserHandle   string                  `bson:"user_handle" json:"user_handle"`
+	Email        string                  `bson:"email" json:"email"`
+	Password     string                  `bson:"password" json:"-"` // Omitted from JSON responses
+	Preferences  NotificationPreferences `bson:"preferences" json:"preferences"`
+	DeviceTokens []string                `bson:"device_tokens"`
 }
 
 func (u *User) Initialize() {

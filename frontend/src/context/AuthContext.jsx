@@ -24,16 +24,16 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
-  const login = async (email, password) => {
-    const data = await authAPI.signin(email, password);
+  const login = async (email, password, deviceToken) => {
+    const data = await authAPI.signin(email, password, deviceToken);
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data;
   };
 
-  const signup = async (email, password, userHandle) => {
-    const data = await authAPI.signup(email, password, userHandle);
+  const signup = async (email, password, userHandle, deviceToken) => {
+    const data = await authAPI.signup(email, password, userHandle, deviceToken);
     return data;
   };
 

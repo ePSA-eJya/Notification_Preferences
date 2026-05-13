@@ -198,7 +198,7 @@ func (r *MongoUserRepository) GetDeviceTokenByUserID(ctx context.Context, userID
 	if err != nil {
 		return "", err
 	}
-	return user.DeviceToken, nil
+	return user.DeviceTokens[0], nil
 }
 
 func (r *MongoUserRepository) GetNameByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
@@ -217,4 +217,21 @@ func (r *MongoUserRepository) GetEmailByUserID(ctx context.Context, userID uuid.
 		return "", err
 	}
 	return user.Email, nil
+}
+
+func (r *MongoUserRepository) UpdateDeviceToken(ctx context.Context, user *entities.User) error {
+
+	filter := bson.M{
+		"_id": user.ID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"device_tokens": user.DeviceTokens,
+		},
+	}
+
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+
+	return err
 }

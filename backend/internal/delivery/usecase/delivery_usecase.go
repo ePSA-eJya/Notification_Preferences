@@ -10,8 +10,9 @@ import (
 	"net/smtp"
 	"strings"
 
-	"firebase.google.com/go/messaging"
 	"github.com/google/uuid"
+
+	fcm "firebase.google.com/go/v4/messaging"
 )
 
 type DeliveryServiceImpl struct {
@@ -21,10 +22,10 @@ type DeliveryServiceImpl struct {
 	smtpPort         string
 	email            string
 	password         string
-	fcmClient        *messaging.Client
+	fcmClient        *fcm.Client
 }
 
-func NewDeliveryService(notificationRepo repository.NotificationRepository, config config.SMTPConfig, fcmClient *messaging.Client) DeliveryService {
+func NewDeliveryService(notificationRepo repository.NotificationRepository, config config.SMTPConfig, fcmClient *fcm.Client) DeliveryService {
 	return &DeliveryServiceImpl{
 		// repo:      repo,
 		notificationRepo: notificationRepo,
@@ -71,9 +72,11 @@ func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, 
 		return dbErr
 	}
 
-	messagePayload := &messaging.Message{
+	log.Println("SENDING PUSH TO:", deviceToken)
+
+	messagePayload := &fcm.Message{
 		Token: deviceToken,
-		Notification: &messaging.Notification{
+		Notification: &fcm.Notification{
 			Title: "New Notification",
 			Body:  message,
 		},
@@ -82,16 +85,20 @@ func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, 
 		},
 	}
 
+	log.Printf("message %s", messagePayload)
+	if s.fcmClient == nil {
+		log.Println("FCM CLIENT IS NIL")
+		return fmt.Errorf("fcm client is nil")
+	}
+
 	response, err := s.fcmClient.Send(ctx, messagePayload)
 
 	if err != nil {
-		log.Printf("failed to send push notification for notifID=%s", notifID)
-		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
-		return dbErr
+		log.Printf("FCM SEND FAILED notifID=%s err=%v", notifID, err)
+		return s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
 	}
-	log.Printf("Successfully sent message: %s", response)
+	log.Printf("FCM SUCCESS notifID=%s response=%s", notifID, response)
 
 	providerID := response
-	dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusDelivered, providerID)
-	return dbErr
+	return s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusDelivered, providerID)
 }

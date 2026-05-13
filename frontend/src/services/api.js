@@ -28,12 +28,28 @@ async function request(method, path, body = null) {
 }
 
 // ===== Auth =====
-export const authAPI = {
-  signup: (email, password, user_handle) =>
-    request('POST', '/auth/signup', { email, password, user_handle }),
+// export const authAPI = {
+//   signup: (email, password, user_handle) =>
+//     request('POST', '/auth/signup', { email, password, user_handle }),
 
-  signin: (email, password) =>
-    request('POST', '/auth/signin', { email, password }),
+//   signin: (email, password) =>
+//     request('POST', '/auth/signin', { email, password }),
+// };
+
+export const authAPI = {
+
+  signup: (email, password, user_handle, deviceToken) =>
+    request('POST', '/auth/signup', { email, password, user_handle, deviceToken, }),
+
+  // signin: (email, password, deviceToken) =>
+  //   request('POST', '/auth/signin', { email, password, deviceToken, }),
+  signin: (email, password, deviceToken) => {
+    return request('POST', '/auth/signin', {
+      email,
+      password,
+      deviceToken,
+    });
+  },
 };
 
 // ===== Users =====

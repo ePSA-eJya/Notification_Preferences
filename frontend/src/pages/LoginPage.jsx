@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getDeviceToken } from '../firebase';
+
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -17,7 +19,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
+
+      // GET FCM TOKEN
+      const deviceToken = await getDeviceToken();
+
+      // SEND LOGIN + TOKEN
+      await login(email, password, deviceToken);
+
       navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed');

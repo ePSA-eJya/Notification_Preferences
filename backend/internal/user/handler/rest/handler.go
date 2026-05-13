@@ -45,7 +45,7 @@ func (h *HttpUserHandler) Login(c *fiber.Ctx) error {
 		return responses.Error(c, apperror.ErrInvalidData)
 	}
 
-	token, userEntity, err := h.userUseCase.Login(ctx, loginReq.Email, loginReq.Password)
+	token, userEntity, err := h.userUseCase.Login(ctx, loginReq.Email, loginReq.Password, loginReq.DeviceToken)
 	if err != nil {
 		return responses.ErrorWithMessage(c, apperror.ErrUnauthorized, "invalid email or password")
 	}

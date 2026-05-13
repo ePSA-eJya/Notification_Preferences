@@ -33,8 +33,9 @@ func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database, publisher *brok
 	prefRepo := preferenceRepository.NewMongoPreferenceRepository(db)
 	notifRepo := notifRepository.NewNotificationRepository(db)
 	followRepo := followRepository.NewMongoFollowRepository(db)
+	fcmClient := config.InitFCM()
 
-	deliveryService := deliveryUseCase.NewDeliveryService(notifRepo, cfg.SMTP, nil)
+	deliveryService := deliveryUseCase.NewDeliveryService(notifRepo, cfg.SMTP, fcmClient)
 	notifService := notifUseCase.NewNotificationService(notifRepo, feedRepo, followRepo, userRepo, prefRepo, deliveryService)
 
 	eventTopic := ""

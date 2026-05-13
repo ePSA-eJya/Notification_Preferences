@@ -25,4 +25,5 @@ type UserRepository interface {
 	GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error)
 	GetNameByUserID(ctx context.Context, userID uuid.UUID) (string, error)
 	GetEmailByUserID(ctx context.Context, userID uuid.UUID) (string, error)
+	UpdateDeviceToken(ctx context.Context, user *entities.User) error
 }

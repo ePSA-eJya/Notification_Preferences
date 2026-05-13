@@ -21,9 +21,18 @@ func ToUserResponseList(users []*entities.User) []*UserResponse {
 
 // From RegisterRequest to entity.User (optional, if want to use in usecase)
 func ToUserEntity(req *RegisterRequest) *entities.User {
+	deviceTokens := []string{}
+	if req.DeviceToken != "" {
+		deviceTokens = append(
+			deviceTokens,
+			req.DeviceToken,
+		)
+	}
+
 	return &entities.User{
-		Email:      req.Email,
-		Password:   req.Password,
-		UserHandle: req.UserHandle,
+		Email:        req.Email,
+		Password:     req.Password,
+		UserHandle:   req.UserHandle,
+		DeviceTokens: deviceTokens,
 	}
 }
