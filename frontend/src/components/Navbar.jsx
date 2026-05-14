@@ -1,7 +1,7 @@
 export default function Navbar({ title }) {
   return (
     <header className="navbar">
-      <h2 className="navbar-title">{title}</h2>
+      <h1 className="navbar-title">{title}</h1>
       <div className="navbar-actions">
         {/* Future: search bar, notification bell count */}
       </div>

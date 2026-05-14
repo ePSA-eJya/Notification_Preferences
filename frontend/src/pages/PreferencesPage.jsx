@@ -4,20 +4,20 @@ import Navbar from '../components/Navbar.jsx';
 import PreferenceToggle from '../components/PreferenceToggle.jsx';
 
 const actionTypes = [
-  { key: 'likes', label: 'Likes', icon: '❤️' },
-  { key: 'comments', label: 'Comments', icon: '💬' },
-  { key: 'follows', label: 'Follows', icon: '👤' },
-  { key: 'posts', label: 'Posts', icon: '📝' },
+  { key: 'likes', label: 'Likes', icon: 'fas fa-heart' },
+  { key: 'comments', label: 'Comments', icon: 'fas fa-comment' },
+  { key: 'follows', label: 'Follows', icon: 'fas fa-user' },
+  { key: 'posts', label: 'Posts', icon: 'fas fa-edit' },
 ];
 
 const channels = ['in_app', 'push', 'email'];
 const channelLabels = { in_app: 'In-App', push: 'Push', email: 'Email' };
 
 const defaultPrefs = {
-  likes:    { in_app: 'ALL', push: 'ALL', email: 'NONE' },
+  likes: { in_app: 'ALL', push: 'ALL', email: 'NONE' },
   comments: { in_app: 'ALL', push: 'ALL', email: 'NONE' },
-  follows:  { in_app: 'ALL', push: 'ALL', email: 'NONE' },
-  posts:    { in_app: 'ALL', push: 'ALL', email: 'NONE' },
+  follows: { in_app: 'ALL', push: 'ALL', email: 'NONE' },
+  posts: { in_app: 'ALL', push: 'ALL', email: 'NONE' },
 };
 
 export default function PreferencesPage() {
@@ -79,7 +79,7 @@ export default function PreferencesPage() {
     <>
       <Navbar title="Preferences" />
       <div className="page-container">
-        <h1 className="page-title">Notification Preferences</h1>
+        {/* <h1 className="page-title">Notification Preferences</h1> */}
         <p className="page-subtitle">
           Control how and when you receive notifications for each activity type
         </p>
@@ -99,7 +99,7 @@ export default function PreferencesPage() {
                 <tr key={action.key}>
                   <td>
                     <div className="pref-row-label">
-                      <span className="pref-row-icon">{action.icon}</span>
+                      <span className="pref-row-icon"><i className={action.icon}></i></span>
                       {action.label}
                     </div>
                   </td>
@@ -123,10 +123,10 @@ export default function PreferencesPage() {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? 'Saving...' : '💾 Save Preferences'}
+            {saving ? 'Saving...' : <> Save Preferences</>}
           </button>
           {saved && (
-            <span className="badge badge-success fade-in">✅ Saved successfully</span>
+            <span className="badge badge-success fade-in"><i className="fas fa-check"></i> Saved successfully</span>
           )}
         </div>
       </div>

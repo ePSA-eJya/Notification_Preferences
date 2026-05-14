@@ -37,7 +37,7 @@ export default function FollowingPage() {
     <>
       <Navbar title="Following" />
       <div className="page-container">
-        <h1 className="page-title">Following</h1>
+        {/* <h1 className="page-title">Following</h1> */}
         <p className="page-subtitle">People you follow and receive notifications from</p>
 
         {loading ? (
@@ -47,7 +47,7 @@ export default function FollowingPage() {
           </div>
         ) : following.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
+            <div className="empty-state-icon"><i className="fas fa-users"></i></div>
             <div className="empty-state-text">You are not following anyone yet.</div>
           </div>
         ) : (

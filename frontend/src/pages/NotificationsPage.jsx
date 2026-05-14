@@ -28,11 +28,10 @@ export default function NotificationsPage() {
       <div className="page-container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div>
-            <h1 className="page-title">Notifications</h1>
-            <p className="page-subtitle">Your notification inbox with delivery status</p>
+            <p className="page-subtitle">Your notification inbox</p>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={() => { setLoading(true); load(); }}>
-            🔄 Refresh
+            <i class="fa fa-refresh" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -43,7 +42,7 @@ export default function NotificationsPage() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🔔</div>
+            <div className="empty-state-icon"><i className="fas fa-bell"></i></div>
             <div className="empty-state-text">
               No notifications yet. Interact with other users to see notifications here!
             </div>

@@ -22,7 +22,7 @@ type UserRepository interface {
 	GetFollowers(ctx context.Context, followeeID uuid.UUID) ([]uuid.UUID, error)
 	// GetFollowing returns a list of user IDs that a user is following
 	GetFollowing(ctx context.Context, followerID uuid.UUID) ([]uuid.UUID, error)
-	GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error)
+	GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) ([]string, error)
 	GetNameByUserID(ctx context.Context, userID uuid.UUID) (string, error)
 	GetEmailByUserID(ctx context.Context, userID uuid.UUID) (string, error)
 	UpdateDeviceToken(ctx context.Context, user *entities.User) error

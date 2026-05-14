@@ -2,12 +2,12 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const navItems = [
-  { path: '/', label: 'Feed', icon: '📰' },
-  { path: '/users', label: 'Discover', icon: '👥' },
-  { path: '/notifications', label: 'Notifications', icon: '🔔' },
-  { path: '/followers', label: 'Followers', icon: '🫂' },
-  { path: '/following', label: 'Following', icon: '👤' },
-  { path: '/preferences', label: 'Preferences', icon: '⚙️' },
+  { path: '/', label: 'Feed', icon: 'fas fa-newspaper' },
+  { path: '/users', label: 'Discover', icon: 'fas fa-users' },
+  { path: '/notifications', label: 'Notifications', icon: 'fas fa-bell' },
+  { path: '/followers', label: 'Followers', icon: 'fas fa-user-friends' },
+  { path: '/following', label: 'Following', icon: 'fas fa-user' },
+  { path: '/preferences', label: 'Preferences', icon: 'fas fa-cog' },
 ];
 
 export default function Sidebar() {
@@ -17,7 +17,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <span className="sidebar-brand-icon">🔔</span>
+        {/* <span className="sidebar-brand-icon"><i className="fas fa-bell"></i></span> */}
         <span className="sidebar-brand-text">NotifPref</span>
       </div>
 
@@ -28,7 +28,7 @@ export default function Sidebar() {
             to={item.path}
             className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
           >
-            <span className="sidebar-link-icon">{item.icon}</span>
+            <span className="sidebar-link-icon"><i className={item.icon}></i></span>
             {item.label}
           </NavLink>
         ))}
@@ -45,7 +45,7 @@ export default function Sidebar() {
           </div>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={logout} style={{ width: '100%', marginTop: 8 }}>
-          🚪 Logout
+          <i className="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>
     </aside>

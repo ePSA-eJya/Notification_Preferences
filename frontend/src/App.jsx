@@ -16,6 +16,12 @@ import { getDeviceToken, listenMessages } from './firebase.js';
 export default function App() {
   const { token, loading } = useAuth();
   useEffect(() => {
+    // getDeviceToken().then(token => {
+    //   if (token) {
+    //     console.log("Send this token to backend:", token);
+    //   }
+    // });
+
     listenMessages();
   }, []);
   if (loading) {

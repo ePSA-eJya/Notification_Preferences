@@ -19,7 +19,7 @@ export default function UsersPage() {
       .then(([users, following]) => {
         const list = Array.isArray(users) ? users : [];
         setUsers(list);
-        
+
         // Convert following array to a Set of IDs for O(1) lookup
         const followingIds = new Set(following?.map(u => u.id) || []);
         setFollowingSet(followingIds);
@@ -64,8 +64,8 @@ export default function UsersPage() {
     <>
       <Navbar title="Discover Users" />
       <div className="page-container">
-        <h1 className="page-title">Discover Users</h1>
-        <p className="page-subtitle">Find and follow people to see their posts in your feed</p>
+        {/* <h1 className="page-title">Discover Users</h1> */}
+        <p className="page-subtitle">Follow people to see their posts in your feed</p>
 
         {loading ? (
           <div className="loading-spinner">
@@ -74,7 +74,7 @@ export default function UsersPage() {
           </div>
         ) : users.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
+            <div className="empty-state-icon"><i className="fas fa-users"></i></div>
             <div className="empty-state-text">No users found.</div>
           </div>
         ) : (

@@ -44,10 +44,10 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Navbar title="Feed" />
+      <Navbar title="My Feed" />
       <div className="page-container">
-        <h1 className="page-title">Your Feed</h1>
-        <p className="page-subtitle">See what people you follow are posting</p>
+        {/* <h1 className="page-title">Your Feed</h1> */}
+        {/* <p className="page-subtitle">See what people you follow are posting</p> */}
 
         {/* Create Post */}
         <form className="create-post card" onSubmit={handleCreatePost}>
@@ -63,7 +63,7 @@ export default function DashboardPage() {
             className="btn btn-primary"
             disabled={posting || !content.trim()}
           >
-            {posting ? 'Posting...' : '📝 Publish Post'}
+            {posting ? 'Posting...' : 'Publish Post'}
           </button>
         </form>
 
@@ -75,7 +75,7 @@ export default function DashboardPage() {
           </div>
         ) : posts.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📰</div>
+            <div className="empty-state-icon"><i className="fas fa-newspaper"></i></div>
             <div className="empty-state-text">
               No posts yet. Follow some users or create your first post!
             </div>

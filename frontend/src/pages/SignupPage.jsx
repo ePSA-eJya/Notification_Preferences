@@ -34,7 +34,7 @@ export default function SignupPage() {
           <div className="auth-header">
             <div className="auth-logo">🔔</div>
             <h1>Create Account</h1>
-            <p>Join and customize your notification experience</p>
+            <p>Join and customise your notification experience</p>
           </div>
 
           {error && <div className="form-error">{error}</div>}

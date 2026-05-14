@@ -114,14 +114,16 @@ export default function PostCard({ post, currentUserId }) {
           onClick={handleLike}
           disabled={likeLoading}
         >
-          {liked ? '❤️' : '🤍'} {liked ? 'Unlike' : 'Like'}
+          {liked ? <i class="fa fa-heart" style={{ color: 'red', fontsize: '18px' }} aria-hidden="true"></i> : <i class="fa fa-heart" style={{ color: '#6f6c6cff' }} aria-hidden="true"></i>} {liked ? 'Unlike' : 'Like'}
         </button>
         <button
           className="post-action-btn"
           onClick={() => setShowCommentsModal(true)}
         >
-          💬 Comments {comments.length > 0 ? `(${comments.length})` : ''}
+          <i class="fa fa-comment" style={{ color: '#6f6c6cff' }} aria-hidden="true"></i>
+          Comments {comments.length > 0 ? `(${comments.length})` : ''}
         </button>
+
       </div>
 
       {showCommentsModal && (

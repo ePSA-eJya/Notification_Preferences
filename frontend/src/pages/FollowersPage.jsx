@@ -19,7 +19,7 @@ export default function FollowersPage() {
     <>
       <Navbar title="My Followers" />
       <div className="page-container">
-        <h1 className="page-title">My Followers</h1>
+        {/* <h1 className="page-title">My Followers</h1> */}
         <p className="page-subtitle">People who follow you and receive your post notifications</p>
 
         {loading ? (
@@ -29,7 +29,7 @@ export default function FollowersPage() {
           </div>
         ) : followers.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
+            <div className="empty-state-icon"><i className="fas fa-users"></i></div>
             <div className="empty-state-text">You don't have any followers yet.</div>
           </div>
         ) : (

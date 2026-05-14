@@ -125,13 +125,15 @@ func (s *NotificationServiceImpl) GetRecipientsByActionType(ctx context.Context,
 }
 
 func (s *NotificationServiceImpl) SendPushNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID, message string) {
-	deviceToken, err := s.userRepo.GetDeviceTokenByUserID(ctx, recipientID)
-	if err != nil || deviceToken == "" {
-		log.Printf("Skipping Push: No token found for user %s", recipientID)
+	deviceTokens, err := s.userRepo.GetDeviceTokenByUserID(ctx, recipientID)
+	if err != nil || deviceTokens == nil {
+		log.Printf("Skipping Push: No tokens found for user %s", recipientID)
 		return
 	}
 
-	s.deliveryService.SendPush(ctx, notificationID, deviceToken, message)
+	for _, deviceToken := range deviceTokens {
+		s.deliveryService.SendPush(ctx, notificationID, deviceToken, message)
+	}
 }
 
 func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *entities.Event, notificationID *uuid.UUID, recipientID uuid.UUID, message string) {

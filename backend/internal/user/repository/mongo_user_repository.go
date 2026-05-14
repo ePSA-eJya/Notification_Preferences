@@ -192,13 +192,13 @@ func (r *MongoUserRepository) GetFollowing(ctx context.Context, followerID uuid.
 	return ids, nil
 }
 
-func (r *MongoUserRepository) GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
+func (r *MongoUserRepository) GetDeviceTokenByUserID(ctx context.Context, userID uuid.UUID) ([]string, error) {
 	var user entities.User
 	err := r.collection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return user.DeviceTokens[0], nil
+	return user.DeviceTokens, nil
 }
 
 func (r *MongoUserRepository) GetNameByUserID(ctx context.Context, userID uuid.UUID) (string, error) {
