@@ -23,6 +23,8 @@ export default function LoginPage() {
       // GET FCM TOKEN
       const deviceToken = await getDeviceToken();
 
+      // console.log("DEVICE TOKEN:", deviceToken);
+
       // SEND LOGIN + TOKEN
       await login(email, password, deviceToken);
 
@@ -39,7 +41,8 @@ export default function LoginPage() {
       <div className="auth-card fade-in">
         <div className="card">
           <div className="auth-header">
-            <div className="auth-logo">🔔</div>
+            <div className="auth-logo"><i class="fa fa-circle-notch fa-2x" style={{ 'color': '#cc664d' }} aria-hidden="true"></i>
+            </div>
             <h1>Welcome Back</h1>
             <p>Sign in to manage your notifications</p>
           </div>

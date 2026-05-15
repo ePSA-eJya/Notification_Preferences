@@ -181,12 +181,20 @@ func (s *NotificationServiceImpl) CheckIfFollow(recipientID uuid.UUID, actorID u
 }
 
 func (s *NotificationServiceImpl) ShouldNotify(recipientID uuid.UUID, actorID uuid.UUID, prefLevel entities.PreferenceLevel) bool {
+	// i want post ka notif from someone i follow (not posts of my followers)
+	// i want notif if someone has followed me/liked/commented on my post
+	// i=recipient
 	switch prefLevel {
 	case entities.PrefAll:
 		// User wants all notifications in this category
 		return true
 
-	case entities.PrefFollowers:
+	case entities.PrefFollowers: //ye mere followers hai (sirf jab follow request aaye tab ye hoga) actor follows me (i am the followee)
+		// User only wants notifications from accounts who follow them
+		// s.Follow should check if actorID follows recipientID
+		return s.CheckIfFollow(actorID, recipientID)
+
+	case entities.PrefFollowing: //i follow them  --> i want to receive notif from the actor(followee)
 		// User only wants notifications from accounts they follow
 		// s.Follow should check if recipientID follows actorID
 		return s.CheckIfFollow(recipientID, actorID)

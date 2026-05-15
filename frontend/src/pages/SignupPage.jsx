@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [userHandle, setUserHandle] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +20,12 @@ export default function SignupPage() {
 
     try {
       await signup(email, password, userHandle);
-      navigate('/login');
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
       setError(err.message || 'Signup failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -32,7 +35,7 @@ export default function SignupPage() {
       <div className="auth-card fade-in">
         <div className="card">
           <div className="auth-header">
-            <div className="auth-logo">🔔</div>
+            <div className="auth-logo"><i className="fas fa-bell"></i></div>
             <h1>Create Account</h1>
             <p>Join and customise your notification experience</p>
           </div>
@@ -95,6 +98,17 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+      {showSuccess && (
+        <div className="comments-modal-overlay">
+          <div className="card fade-in" style={{ padding: '40px', width: '90%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ fontSize: '4rem', color: 'var(--success)' }}>
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Account Created!</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Your account has been created successfully. Redirecting to login...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

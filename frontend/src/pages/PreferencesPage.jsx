@@ -107,6 +107,7 @@ export default function PreferencesPage() {
                     <td key={ch}>
                       <PreferenceToggle
                         value={prefs[action.key]?.[ch]}
+                        actionKey={action.key}
                         onChange={(val) => handleChange(action.key, ch, val)}
                       />
                     </td>

@@ -18,7 +18,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-brand">
         {/* <span className="sidebar-brand-icon"><i className="fas fa-bell"></i></span> */}
-        <span className="sidebar-brand-text">NotifPref</span>
+        <span className="sidebar-brand-text">QastCircle</span>
       </div>
 
       <nav className="sidebar-nav">
