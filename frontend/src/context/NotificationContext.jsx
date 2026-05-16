@@ -1,13 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { notificationsAPI } from '../services/api.js';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { notificationsAPI } from "../services/api.js";
 
 const NotificationContext = createContext(null);
 const POLL_INTERVAL_MS = 15000;
 
 function normalizeForegroundPayload(payload) {
   return {
-    title: payload?.notification?.title || 'New notification',
-    body: payload?.notification?.body || '',
+    title: payload?.notification?.title || "New notification",
+    body: payload?.notification?.body || "",
   };
 }
 
@@ -34,58 +42,73 @@ export function NotificationProvider({ children }) {
     setToasts((current) => current.filter((toast) => toast.id !== toastId));
   }, []);
 
-  const pushToast = useCallback((title, message) => {
-    const id = ++toastIdRef.current;
-    setToasts((current) => [...current.slice(-3), { id, title, message }]);
+  const pushToast = useCallback(
+    (title, message) => {
+      const id = ++toastIdRef.current;
+      setToasts((current) => [...current.slice(-3), { id, title, message }]);
 
-    const timer = window.setTimeout(() => {
-      dismissToast(id);
-    }, 4500);
+      const timer = window.setTimeout(() => {
+        dismissToast(id);
+      }, 4500);
 
-    toastTimersRef.current.set(id, timer);
-  }, [dismissToast]);
+      toastTimersRef.current.set(id, timer);
+    },
+    [dismissToast],
+  );
 
-  const refreshNotifications = useCallback(async ({ silent = false, markSeen = false } = {}) => {
-    if (!silent) {
-      setRefreshing(true);
-    }
+  const refreshNotifications = useCallback(
+    async ({ silent = false, markSeen = false } = {}) => {
+      if (!silent) {
+        setRefreshing(true);
+      }
 
-    try {
-      const data = await notificationsAPI.getAll(20);
-      const nextNotifications = Array.isArray(data?.notifications) ? data.notifications : [];
-      const nextIds = new Set(nextNotifications.map((notification) => notification.id));
+      try {
+        const data = await notificationsAPI.getAll(20);
+        const nextNotifications = Array.isArray(data?.notifications)
+          ? data.notifications
+          : [];
+        const nextIds = new Set(
+          nextNotifications.map((notification) => notification.id),
+        );
 
-      if (initialLoadRef.current) {
-        seenIdsRef.current = nextIds;
-        initialLoadRef.current = false;
+        if (initialLoadRef.current) {
+          seenIdsRef.current = nextIds;
+          initialLoadRef.current = false;
+          setNotifications(nextNotifications);
+          setHasNewNotifications(false);
+          return;
+        }
+
+        const previousIds = seenIdsRef.current;
+        const newNotifications = nextNotifications.filter(
+          (notification) => !previousIds.has(notification.id),
+        );
+
         setNotifications(nextNotifications);
-        setHasNewNotifications(false);
-        return;
+        seenIdsRef.current = nextIds;
+
+        if (newNotifications.length > 0 && !markSeen) {
+          setHasNewNotifications(true);
+          newNotifications.slice(0, 3).forEach((notification) => {
+            pushToast(
+              "New notification",
+              notification.message || "You have a new notification",
+            );
+          });
+        }
+
+        if (markSeen) {
+          setHasNewNotifications(false);
+        }
+      } catch (error) {
+        console.error("Failed to refresh notifications:", error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const previousIds = seenIdsRef.current;
-      const newNotifications = nextNotifications.filter((notification) => !previousIds.has(notification.id));
-
-      setNotifications(nextNotifications);
-      seenIdsRef.current = nextIds;
-
-      if (newNotifications.length > 0 && !markSeen) {
-        setHasNewNotifications(true);
-        newNotifications.slice(0, 3).forEach((notification) => {
-          pushToast('New notification', notification.message || 'You have a new notification');
-        });
-      }
-
-      if (markSeen) {
-        setHasNewNotifications(false);
-      }
-    } catch (error) {
-      console.error('Failed to refresh notifications:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [pushToast]);
+    },
+    [pushToast],
+  );
 
   const openDrawer = useCallback(async () => {
     setDrawerOpen(true);
@@ -118,35 +141,44 @@ export function NotificationProvider({ children }) {
       setHasNewNotifications(true);
     };
 
-    window.addEventListener('app:foreground-notification', handleForegroundNotification);
+    window.addEventListener(
+      "app:foreground-notification",
+      handleForegroundNotification,
+    );
     return () => {
-      window.removeEventListener('app:foreground-notification', handleForegroundNotification);
+      window.removeEventListener(
+        "app:foreground-notification",
+        handleForegroundNotification,
+      );
     };
   }, [pushToast]);
 
-  const value = useMemo(() => ({
-    notifications,
-    loading,
-    refreshing,
-    drawerOpen,
-    hasNewNotifications,
-    toasts,
-    refreshNotifications,
-    openDrawer,
-    closeDrawer,
-    dismissToast,
-  }), [
-    notifications,
-    loading,
-    refreshing,
-    drawerOpen,
-    hasNewNotifications,
-    toasts,
-    refreshNotifications,
-    openDrawer,
-    closeDrawer,
-    dismissToast,
-  ]);
+  const value = useMemo(
+    () => ({
+      notifications,
+      loading,
+      refreshing,
+      drawerOpen,
+      hasNewNotifications,
+      toasts,
+      refreshNotifications,
+      openDrawer,
+      closeDrawer,
+      dismissToast,
+    }),
+    [
+      notifications,
+      loading,
+      refreshing,
+      drawerOpen,
+      hasNewNotifications,
+      toasts,
+      refreshNotifications,
+      openDrawer,
+      closeDrawer,
+      dismissToast,
+    ],
+  );
 
   return (
     <NotificationContext.Provider value={value}>
@@ -158,7 +190,9 @@ export function NotificationProvider({ children }) {
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within NotificationProvider",
+    );
   }
   return context;
 }

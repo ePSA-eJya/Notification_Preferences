@@ -1,12 +1,12 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const navItems = [
-  { path: '/', label: 'Feed', icon: 'fas fa-newspaper' },
-  { path: '/users', label: 'Discover', icon: 'fas fa-users' },
-  { path: '/followers', label: 'Followers', icon: 'fas fa-user-friends' },
-  { path: '/following', label: 'Following', icon: 'fas fa-user' },
-  { path: '/preferences', label: 'Preferences', icon: 'fas fa-cog' },
+  { path: "/", label: "Feed", icon: "fas fa-newspaper" },
+  { path: "/users", label: "Discover", icon: "fas fa-users" },
+  { path: "/followers", label: "Followers", icon: "fas fa-user-friends" },
+  { path: "/following", label: "Following", icon: "fas fa-user" },
+  { path: "/preferences", label: "Preferences", icon: "fas fa-cog" },
 ];
 
 export default function Sidebar() {
@@ -25,9 +25,11 @@ export default function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
-            className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
+            className={`sidebar-link ${location.pathname === item.path ? "active" : ""}`}
           >
-            <span className="sidebar-link-icon"><i className={item.icon}></i></span>
+            <span className="sidebar-link-icon">
+              <i className={item.icon}></i>
+            </span>
             {item.label}
           </NavLink>
         ))}
@@ -36,14 +38,20 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <div className="sidebar-user">
           <div className="sidebar-user-avatar">
-            {user?.user_handle?.[0]?.toUpperCase() || '?'}
+            {user?.user_handle?.[0]?.toUpperCase() || "?"}
           </div>
           <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{user?.user_handle || 'User'}</div>
-            <div className="sidebar-user-email">{user?.email || ''}</div>
+            <div className="sidebar-user-name">
+              {user?.user_handle || "User"}
+            </div>
+            <div className="sidebar-user-email">{user?.email || ""}</div>
           </div>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={logout} style={{ width: '100%', marginTop: 8 }}>
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={logout}
+          style={{ width: "100%", marginTop: 8 }}
+        >
           <i className="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>

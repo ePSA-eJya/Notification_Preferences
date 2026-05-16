@@ -1,7 +1,11 @@
-import NotificationItem from './NotificationItem.jsx';
-import { useNotifications } from '../context/NotificationContext.jsx';
+import NotificationItem from "./NotificationItem.jsx";
+import { useNotifications } from "../context/NotificationContext.jsx";
 
-export default function NotificationInbox({ title = 'Notifications', subtitle = 'Live updates from the app', showRefresh = true }) {
+export default function NotificationInbox({
+  title = "Notifications",
+  subtitle = "Live updates from the app",
+  showRefresh = true,
+}) {
   const {
     notifications,
     loading,
@@ -22,15 +26,24 @@ export default function NotificationInbox({ title = 'Notifications', subtitle = 
           <p>{subtitle}</p>
         </div>
         {showRefresh && (
-          <button className="btn btn-secondary btn-sm" type="button" onClick={handleRefresh} disabled={loading || refreshing}>
+          <button
+            className="btn btn-secondary btn-sm"
+            type="button"
+            onClick={handleRefresh}
+            disabled={loading || refreshing}
+          >
             <i className="fa fa-refresh" aria-hidden="true"></i>
           </button>
         )}
       </div>
 
       <div className="notification-inbox-meta">
-        <span>{hasNewNotifications ? 'New activity available' : `${notifications.length} notifications`}</span>
-        <span>{refreshing ? 'Refreshing...' : 'Auto-updates on'}</span>
+        <span>
+          {hasNewNotifications
+            ? "New activity available"
+            : `${notifications.length} notifications`}
+        </span>
+        <span>{refreshing ? "Refreshing..." : "Auto-updates on"}</span>
       </div>
 
       {loading ? (
@@ -40,13 +53,20 @@ export default function NotificationInbox({ title = 'Notifications', subtitle = 
         </div>
       ) : notifications.length === 0 ? (
         <div className="notification-inbox-empty">
-          <div className="empty-state-icon"><i className="fas fa-bell"></i></div>
-          <div className="empty-state-text">No notifications yet. New activity will appear here instantly.</div>
+          <div className="empty-state-icon">
+            <i className="fas fa-bell"></i>
+          </div>
+          <div className="empty-state-text">
+            No notifications yet. New activity will appear here instantly.
+          </div>
         </div>
       ) : (
         <div className="notif-list">
           {notifications.map((notification) => (
-            <NotificationItem key={notification.id} notification={notification} />
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+            />
           ))}
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useNotifications } from '../context/NotificationContext.jsx';
+import { useNotifications } from "../context/NotificationContext.jsx";
 
 export default function NotificationToastStack() {
   const { toasts, dismissToast } = useNotifications();
@@ -8,7 +8,11 @@ export default function NotificationToastStack() {
   }
 
   return (
-    <div className="notification-toast-stack" aria-live="polite" aria-atomic="true">
+    <div
+      className="notification-toast-stack"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {toasts.map((toast) => (
         <div key={toast.id} className="notification-toast card-glass">
           <div className="notification-toast-icon">
@@ -18,7 +22,12 @@ export default function NotificationToastStack() {
             <div className="notification-toast-title">{toast.title}</div>
             <div className="notification-toast-message">{toast.message}</div>
           </div>
-          <button type="button" className="notification-toast-close" onClick={() => dismissToast(toast.id)} aria-label="Dismiss notification">
+          <button
+            type="button"
+            className="notification-toast-close"
+            onClick={() => dismissToast(toast.id)}
+            aria-label="Dismiss notification"
+          >
             <i className="fa fa-times" aria-hidden="true"></i>
           </button>
         </div>

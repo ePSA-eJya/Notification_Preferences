@@ -1,5 +1,5 @@
-import NotificationInbox from './NotificationInbox.jsx';
-import { useNotifications } from '../context/NotificationContext.jsx';
+import NotificationInbox from "./NotificationInbox.jsx";
+import { useNotifications } from "../context/NotificationContext.jsx";
 
 export default function NotificationDrawer() {
   const { drawerOpen, closeDrawer } = useNotifications();
@@ -10,8 +10,16 @@ export default function NotificationDrawer() {
 
   return (
     <div className="notification-drawer-overlay" onClick={closeDrawer}>
-      <aside className="notification-drawer" onClick={(event) => event.stopPropagation()}>
-        <button className="notification-drawer-close" type="button" onClick={closeDrawer} aria-label="Close notifications">
+      <aside
+        className="notification-drawer"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          className="notification-drawer-close"
+          type="button"
+          onClick={closeDrawer}
+          aria-label="Close notifications"
+        >
           <i className="fa fa-times" aria-hidden="true"></i>
         </button>
         <NotificationInbox
