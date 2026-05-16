@@ -1,59 +1,34 @@
-import { useState, useEffect } from 'react';
-import { notificationsAPI } from '../services/api.js';
+import { useEffect } from 'react';
 import Navbar from '../components/Navbar.jsx';
-import NotificationItem from '../components/NotificationItem.jsx';
+import NotificationInbox from '../components/NotificationInbox.jsx';
+import { useNotifications } from '../context/NotificationContext.jsx';
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = async () => {
-    try {
-      const data = await notificationsAPI.getAll();
-      setNotifications(data?.notifications || []);
-    } catch (err) {
-      console.error('Failed to load notifications:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { refreshNotifications } = useNotifications();
 
   useEffect(() => {
-    load();
-  }, []);
+    refreshNotifications({ silent: true, markSeen: true });
+  }, [refreshNotifications]);
 
   return (
     <>
       <Navbar title="Notifications" />
-      <div className="page-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+      <div className="page-container notification-page-shell">
+        <div className="notification-page-intro">
           <div>
-            <p className="page-subtitle">Your notification inbox</p>
+            <p className="page-subtitle">Your live inbox</p>
+            <h2>Notifications are now anchored to the top bar</h2>
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={() => { setLoading(true); load(); }}>
-            <i class="fa fa-refresh" aria-hidden="true"></i>
-          </button>
+          <p className="notification-page-copy">
+            Use the bell icon to open the slide-out inbox. This page mirrors the same live feed for direct access.
+          </p>
         </div>
 
-        {loading ? (
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            Loading notifications...
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon"><i className="fas fa-bell"></i></div>
-            <div className="empty-state-text">
-              No notifications yet. Interact with other users to see notifications here!
-            </div>
-          </div>
-        ) : (
-          <div className="notif-list">
-            {notifications.map((n) => (
-              <NotificationItem key={n.id} notification={n} />
-            ))}
-          </div>
-        )}
+        <NotificationInbox
+          title="Notifications"
+          subtitle="Auto-updating inbox and rich push activity"
+          showRefresh={false}
+        />
       </div>
     </>
   );

@@ -157,6 +157,7 @@ func (s *UserService) FollowUser(ctx context.Context, followerID, followeeID uui
 		EntityID:   followeeID,
 		EntityType: "USER",
 		ActionType: entities.Followed,
+		Payload:    "started following you",
 		CreatedAt:  time.Now().UTC(),
 	}
 	log.Printf("Publishing FOLLOW event: %+v", event)

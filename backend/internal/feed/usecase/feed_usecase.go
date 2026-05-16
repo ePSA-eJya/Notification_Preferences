@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"Notification_Preferences/internal/broker"
@@ -11,6 +13,17 @@ import (
 
 	"github.com/google/uuid"
 )
+
+func notificationExcerpt(text string, limit int) string {
+	trimmed := strings.TrimSpace(text)
+	if trimmed == "" || limit <= 0 {
+		return trimmed
+	}
+	if len(trimmed) <= limit {
+		return trimmed
+	}
+	return strings.TrimSpace(trimmed[:limit]) + "..."
+}
 
 type FeedUsecase struct {
 	feedRepo   feedRepoPkg.FeedRepository
@@ -82,6 +95,7 @@ func (s *FeedUsecase) CreatePost(ctx context.Context, post *entities.Post) error
 			EntityID:   post.ID,
 			EntityType: "POST",
 			ActionType: entities.Posted,
+			Payload:    fmt.Sprintf("shared a new post: '%s'", notificationExcerpt(post.Content, 60)),
 			CreatedAt:  time.Now().UTC(),
 		}
 		_ = s.publisher.Publish(ctx, s.eventTopic, event)
@@ -95,6 +109,12 @@ func (s *FeedUsecase) LikePost(ctx context.Context, like *entities.Like) error {
 		like.ID = uuid.New()
 	}
 	like.CreatedAt = time.Now().UTC()
+	var payload string
+	if post, err := s.feedRepo.GetPostByID(ctx, like.PostID.String()); err == nil {
+		payload = fmt.Sprintf("liked your post: '%s'", notificationExcerpt(post.Content, 60))
+	} else {
+		payload = "liked your post"
+	}
 
 	if err := s.feedRepo.SaveLike(ctx, like); err != nil {
 		return err
@@ -107,6 +127,7 @@ func (s *FeedUsecase) LikePost(ctx context.Context, like *entities.Like) error {
 			EntityID:   like.PostID,
 			EntityType: "POST",
 			ActionType: entities.Liked,
+			Payload:    payload,
 			CreatedAt:  time.Now().UTC(),
 		}
 		_ = s.publisher.Publish(ctx, s.eventTopic, event)
@@ -142,6 +163,7 @@ func (s *FeedUsecase) CommentOnPost(ctx context.Context, comment *entities.Comme
 			EntityID:   comment.PostID,
 			EntityType: "POST",
 			ActionType: entities.Commented,
+			Payload:    fmt.Sprintf("commented: '%s'", notificationExcerpt(comment.Text, 60)),
 			CreatedAt:  time.Now().UTC(),
 		}
 		_ = s.publisher.Publish(ctx, s.eventTopic, event)

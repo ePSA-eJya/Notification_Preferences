@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
+import { NotificationProvider } from './context/NotificationContext.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SignupPage from './pages/SignupPage.jsx';
@@ -34,65 +35,67 @@ export default function App() {
 
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/signup" element={token ? <Navigate to="/" replace /> : <SignupPage />} />
+    <NotificationProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
+        <Route path="/signup" element={token ? <Navigate to="/" replace /> : <SignupPage />} />
 
-      {/* Protected Routes wrapped with Layout */}
-      <Route element={<Layout />}>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/preferences"
-          element={
-            <ProtectedRoute>
-              <PreferencesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute>
-              <UsersPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/followers"
-          element={
-            <ProtectedRoute>
-              <FollowersPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/following"
-          element={
-            <ProtectedRoute>
-              <FollowingPage />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+        {/* Protected Routes wrapped with Layout */}
+        <Route element={<Layout />}>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/preferences"
+            element={
+              <ProtectedRoute>
+                <PreferencesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <UsersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/followers"
+            element={
+              <ProtectedRoute>
+                <FollowersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/following"
+            element={
+              <ProtectedRoute>
+                <FollowingPage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </NotificationProvider>
   );
 }

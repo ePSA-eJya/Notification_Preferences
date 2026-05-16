@@ -36,10 +36,20 @@ export async function getDeviceToken() {
 // 🔵 Foreground listener
 export function listenMessages() {
     onMessage(messaging, (payload) => {
-        console.log("Foreground message:", payload);
+        const detail = {
+            title: payload?.notification?.title || 'New notification',
+            body: payload?.notification?.body || '',
+            raw: payload,
+        };
 
-        new Notification(payload.notification.title, {
-            body: payload.notification.body,
-        });
+        window.dispatchEvent(new CustomEvent('app:foreground-notification', {
+            detail,
+        }));
+
+        if (document.hidden && Notification.permission === 'granted') {
+            new Notification(detail.title, {
+                body: detail.body,
+            });
+        }
     });
 }

@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -41,6 +42,10 @@ func (s *NotificationServiceImpl) FormatMessage(ctx context.Context, event *enti
 	if err != nil {
 		log.Printf("failed to fetch actor name for userID=%s", event.ActorID)
 		return "", err
+	}
+
+	if strings.TrimSpace(event.Payload) != "" {
+		return fmt.Sprintf("%s %s", actorName, strings.TrimSpace(event.Payload)), nil
 	}
 
 	var message string
@@ -146,7 +151,7 @@ func (s *NotificationServiceImpl) SendEmailNotif(ctx context.Context, event *ent
 	subject := "New Activity on Your Account"
 	emailErr := s.deliveryService.SendGmail(ctx, notificationID, []string{email}, subject, message)
 	if emailErr != nil {
-		log.Printf("failed to update email notification status", emailErr)
+		log.Printf("failed to update email notification status: %v", emailErr)
 	}
 }
 

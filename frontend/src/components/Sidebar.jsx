@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext.jsx';
 const navItems = [
   { path: '/', label: 'Feed', icon: 'fas fa-newspaper' },
   { path: '/users', label: 'Discover', icon: 'fas fa-users' },
-  { path: '/notifications', label: 'Notifications', icon: 'fas fa-bell' },
   { path: '/followers', label: 'Followers', icon: 'fas fa-user-friends' },
   { path: '/following', label: 'Following', icon: 'fas fa-user' },
   { path: '/preferences', label: 'Preferences', icon: 'fas fa-cog' },
