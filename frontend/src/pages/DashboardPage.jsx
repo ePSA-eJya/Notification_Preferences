@@ -7,35 +7,71 @@ import PostCard from '../components/PostCard.jsx';
 export default function DashboardPage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
+  const [showComposer, setShowComposer] = useState(false);
   const [content, setContent] = useState('');
   const [selectedMedia, setSelectedMedia] = useState([]);
   const [mediaPreviews, setMediaPreviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showNewPosts, setShowNewPosts] = useState(false);
   const [posting, setPosting] = useState(false);
   const fileInputRef = useRef(null);
+  const latestPostIdRef = useRef(null);
 
-  const loadFeed = async () => {
+  const resetComposer = () => {
+    setContent('');
+    setSelectedMedia([]);
+    setMediaPreviews([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const loadFeed = async ({ silent = false, markAsSeen = false } = {}) => {
+    if (!silent) {
+      setRefreshing(true);
+    }
     try {
       const data = await feedAPI.getFeed();
-      setPosts(Array.isArray(data) ? data : []);
+      const nextPosts = Array.isArray(data) ? data : [];
+      const nextTopPostId = nextPosts[0]?.id || null;
+
+      if (latestPostIdRef.current && nextTopPostId && nextTopPostId !== latestPostIdRef.current && !markAsSeen) {
+        setShowNewPosts(true);
+      }
+
+      setPosts(nextPosts);
+      latestPostIdRef.current = nextTopPostId;
+
+      if (markAsSeen) {
+        setShowNewPosts(false);
+      }
     } catch (err) {
       console.error('Failed to load feed:', err);
       setPosts([]);
     } finally {
       setLoading(false);
+      if (!silent) {
+        setRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadFeed();
+    loadFeed({ silent: false, markAsSeen: true });
+
+    const intervalId = setInterval(() => {
+      loadFeed({ silent: true });
+    }, 30000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleMediaSelect = (e) => {
     const files = Array.from(e.target.files || []);
     const validFiles = [];
-    const newPreviews = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       // Validate file type
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
         alert(`${file.name} is not a valid image or video`);
@@ -53,11 +89,6 @@ export default function DashboardPage() {
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
-        newPreviews.push({
-          type: file.type.startsWith('image/') ? 'image' : 'video',
-          url: event.target.result,
-          filename: file.name,
-        });
         setMediaPreviews(prev => [...prev, {
           type: file.type.startsWith('image/') ? 'image' : 'video',
           url: event.target.result,
@@ -67,7 +98,8 @@ export default function DashboardPage() {
       reader.readAsDataURL(file);
     });
 
-    setSelectedMedia(validFiles);
+    setSelectedMedia((prev) => [...prev, ...validFiles]);
+    e.target.value = '';
   };
 
   const removeMedia = (index) => {
@@ -77,19 +109,15 @@ export default function DashboardPage() {
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!content.trim() && selectedMedia.length === 0 || posting) return;
+    if ((!content.trim() && selectedMedia.length === 0) || posting) return;
     setPosting(true);
     try {
       const newPost = await feedAPI.createPost(content.trim(), selectedMedia);
-      console.log('Post created:', newPost);
-      console.log('Media URLs:', newPost.media_urls);
       setPosts((prev) => [newPost, ...prev]);
-      setContent('');
-      setSelectedMedia([]);
-      setMediaPreviews([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      latestPostIdRef.current = newPost.id || latestPostIdRef.current;
+      setShowNewPosts(false);
+      resetComposer();
+      setShowComposer(false);
     } catch (err) {
       console.error('Post creation failed:', err);
       alert('Failed to create post: ' + err.message);
@@ -98,89 +126,35 @@ export default function DashboardPage() {
     }
   };
 
+  const handleOpenComposer = () => {
+    setShowComposer(true);
+  };
+
+  const handleCloseComposer = () => {
+    if (posting) return;
+    resetComposer();
+    setShowComposer(false);
+  };
+
+  const handleShowNewPosts = async () => {
+    await loadFeed({ silent: false, markAsSeen: true });
+  };
+
   return (
     <>
       <Navbar title="My Feed" />
       <div className="page-container">
-        {/* Create Post */}
-        <form className="create-post card" onSubmit={handleCreatePost}>
-          <textarea
-            className="form-input"
-            placeholder="What's on your mind?"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={3}
-          />
-          
-          {/* Media Upload Section */}
-          <div style={{ marginTop: '12px' }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              onChange={handleMediaSelect}
-              style={{ display: 'none' }}
-              id="media-input"
-            />
-            <label htmlFor="media-input" style={{ cursor: 'pointer', marginRight: '8px' }}>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="btn btn-secondary"
-                style={{ marginRight: '8px' }}
-              >
-                <i className="fas fa-image"></i> Add Media
-              </button>
-            </label>
-          </div>
-
-          {/* Media Previews */}
-          {mediaPreviews.length > 0 && (
-            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px' }}>
-              {mediaPreviews.map((preview, index) => (
-                <div key={index} style={{ position: 'relative', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#f0f0f0' }}>
-                  {preview.type === 'image' ? (
-                    <img src={preview.url} alt="preview" style={{ width: '100%', height: '80px', objectFit: 'cover' }} />
-                  ) : (
-                    <video src={preview.url} style={{ width: '100%', height: '80px', objectFit: 'cover' }} />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeMedia(index)}
-                    style={{
-                      position: 'absolute',
-                      top: '0',
-                      right: '0',
-                      background: 'rgba(0,0,0,0.7)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0',
-                      cursor: 'pointer',
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
+        {showNewPosts && (
           <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={posting || (!content.trim() && selectedMedia.length === 0)}
-            style={{ marginTop: '12px' }}
+            type="button"
+            className="new-posts-pill"
+            onClick={handleShowNewPosts}
+            disabled={refreshing}
           >
-            {posting ? 'Posting...' : 'Publish Post'}
+            <i className="fa fa-refresh" aria-hidden="true"></i>
+            {refreshing ? 'Updating...' : 'New Posts'}
           </button>
-        </form>
+        )}
 
         {/* Feed */}
         {loading ? (
@@ -200,6 +174,86 @@ export default function DashboardPage() {
             {posts.map((post) => (
               <PostCard key={post.id} post={post} currentUserId={user?.id} />
             ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="fab-btn"
+          onClick={handleOpenComposer}
+          aria-label="Create post"
+        >
+          <i className="fa fa-pencil" aria-hidden="true"></i>
+        </button>
+
+        {showComposer && (
+          <div className="composer-modal-overlay" onClick={handleCloseComposer}>
+            <div className="comments-modal card composer-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="comments-modal-header">
+                <h3>Create Post</h3>
+                <button className="btn btn-ghost btn-sm" type="button" onClick={handleCloseComposer} disabled={posting}>
+                  Close
+                </button>
+              </div>
+
+              <form className="composer-form" onSubmit={handleCreatePost}>
+                <textarea
+                  className="form-input composer-textarea"
+                  placeholder="What's on your mind?"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={5}
+                />
+
+                <div className="composer-actions-row">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={handleMediaSelect}
+                    className="composer-file-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn btn-secondary"
+                    disabled={posting}
+                  >
+                    <i className="fa fa-image" aria-hidden="true"></i>
+                    Add Media
+                  </button>
+                </div>
+
+                {mediaPreviews.length > 0 && (
+                  <div className="composer-preview-grid">
+                    {mediaPreviews.map((preview, index) => (
+                      <div key={`${preview.filename}-${index}`} className="composer-preview-item">
+                        {preview.type === 'image' ? (
+                          <img src={preview.url} alt="preview" />
+                        ) : (
+                          <video src={preview.url} />
+                        )}
+                        <button type="button" className="composer-preview-remove" onClick={() => removeMedia(index)}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="composer-footer">
+                  <span className="composer-hint">You can post with text, media, or both.</span>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={posting || (!content.trim() && selectedMedia.length === 0)}
+                  >
+                    {posting ? 'Posting...' : 'Publish Post'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

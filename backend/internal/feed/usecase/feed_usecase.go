@@ -39,15 +39,26 @@ func (s *FeedUsecase) CreatePost(ctx context.Context, post *entities.Post) error
 		return err
 	}
 
-	// Fetch followers of the author
+	// Fetch followers of the author and include the author themself so the post
+	// appears immediately in their own feed timeline.
 	followers, err := s.userRepo.GetFollowers(ctx, post.UserID)
 	if err != nil {
 		return err
 	}
 
 	// Build feed items and bulk insert
-	items := make([]*entities.FeedItem, 0, len(followers))
+	items := make([]*entities.FeedItem, 0, len(followers)+1)
+	items = append(items, &entities.FeedItem{
+		ID:        uuid.New(),
+		UserID:    post.UserID,
+		PostID:    post.ID,
+		AuthorID:  post.UserID,
+		CreatedAt: post.CreatedAt,
+	})
 	for _, fid := range followers {
+		if fid == post.UserID {
+			continue
+		}
 		item := &entities.FeedItem{
 			ID:        uuid.New(),
 			UserID:    fid,
