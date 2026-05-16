@@ -25,7 +25,6 @@ export default function NotificationDrawer() {
         <NotificationInbox
           title="Notifications"
           subtitle="Your live inbox and push activity"
-          showRefresh={true}
         />
       </aside>
     </div>

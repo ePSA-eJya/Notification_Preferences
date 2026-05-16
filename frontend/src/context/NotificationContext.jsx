@@ -10,12 +10,43 @@ import {
 import { notificationsAPI } from "../services/api.js";
 
 const NotificationContext = createContext(null);
-const POLL_INTERVAL_MS = 15000;
 
 function normalizeForegroundPayload(payload) {
   return {
     title: payload?.notification?.title || "New notification",
     body: payload?.notification?.body || "",
+  };
+}
+
+function normalizeIncomingNotification(
+  payload,
+  fallbackTitle = "New notification",
+) {
+  const data = payload?.data || payload?.raw?.data || {};
+  const notificationId =
+    data.notification_id || payload?.notification_id || `push-${Date.now()}`;
+  const now = new Date().toISOString();
+
+  return {
+    id: notificationId,
+    recipient_id: data.recipient_id || "",
+    event_id: data.notification_id || notificationId,
+    entity_id: data.entity_id || "",
+    entity_type: data.entity_type || "",
+    message: data.message || payload?.notification?.body || fallbackTitle,
+    channels: {
+      in_app: {
+        status: "SENT",
+        read_at: null,
+      },
+      push: {
+        status: "DELIVERED",
+      },
+      email: {
+        status: "SKIPPED",
+      },
+    },
+    created_at: now,
   };
 }
 
@@ -27,8 +58,6 @@ export function NotificationProvider({ children }) {
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [toasts, setToasts] = useState([]);
 
-  const seenIdsRef = useRef(new Set());
-  const initialLoadRef = useRef(true);
   const toastIdRef = useRef(0);
   const toastTimersRef = useRef(new Map());
 
@@ -56,89 +85,126 @@ export function NotificationProvider({ children }) {
     [dismissToast],
   );
 
-  const refreshNotifications = useCallback(
-    async ({ silent = false, markSeen = false } = {}) => {
-      if (!silent) {
-        setRefreshing(true);
+  const refreshNotifications = useCallback(async ({ silent = false } = {}) => {
+    console.log("[Notifications] refreshNotifications called", { silent });
+
+    if (!silent) {
+      setRefreshing(true);
+    }
+
+    try {
+      const data = await notificationsAPI.getAll(20);
+      const nextNotifications = Array.isArray(data?.notifications)
+        ? data.notifications
+        : [];
+
+      console.log("[Notifications] refreshNotifications received", {
+        count: nextNotifications.length,
+        unreadCount: nextNotifications.filter(
+          (notification) => !notification.channels?.in_app?.read_at,
+        ).length,
+      });
+
+      setNotifications(nextNotifications);
+
+      setHasNewNotifications(
+        nextNotifications.some(
+          (notification) => !notification.channels?.in_app?.read_at,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to refresh notifications:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const upsertNotificationFromPush = useCallback((payload) => {
+    const nextNotification = normalizeIncomingNotification(
+      payload,
+      payload?.notification?.title || "New notification",
+    );
+
+    setNotifications((current) => {
+      const existingIndex = current.findIndex(
+        (notification) => notification.id === nextNotification.id,
+      );
+
+      if (existingIndex >= 0) {
+        const cloned = [...current];
+        cloned[existingIndex] = {
+          ...cloned[existingIndex],
+          ...nextNotification,
+          channels: {
+            ...cloned[existingIndex].channels,
+            ...nextNotification.channels,
+            in_app: {
+              ...cloned[existingIndex].channels?.in_app,
+              ...nextNotification.channels.in_app,
+            },
+          },
+        };
+        return cloned;
       }
 
-      try {
-        const data = await notificationsAPI.getAll(20);
-        const nextNotifications = Array.isArray(data?.notifications)
-          ? data.notifications
-          : [];
-        const nextIds = new Set(
-          nextNotifications.map((notification) => notification.id),
-        );
+      return [nextNotification, ...current].slice(0, 20);
+    });
 
-        if (initialLoadRef.current) {
-          seenIdsRef.current = nextIds;
-          initialLoadRef.current = false;
-          setNotifications(nextNotifications);
-          setHasNewNotifications(false);
-          return;
-        }
+    setHasNewNotifications(true);
+  }, []);
 
-        const previousIds = seenIdsRef.current;
-        const newNotifications = nextNotifications.filter(
-          (notification) => !previousIds.has(notification.id),
-        );
-
-        setNotifications(nextNotifications);
-        seenIdsRef.current = nextIds;
-
-        if (newNotifications.length > 0 && !markSeen) {
-          setHasNewNotifications(true);
-          newNotifications.slice(0, 3).forEach((notification) => {
-            pushToast(
-              "New notification",
-              notification.message || "You have a new notification",
-            );
-          });
-        }
-
-        if (markSeen) {
-          setHasNewNotifications(false);
-        }
-      } catch (error) {
-        console.error("Failed to refresh notifications:", error);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [pushToast],
-  );
+  const markAllRead = useCallback(async () => {
+    try {
+      await notificationsAPI.markAllRead();
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          channels: {
+            ...notification.channels,
+            in_app: {
+              ...notification.channels?.in_app,
+              read_at:
+                notification.channels?.in_app?.read_at ||
+                new Date().toISOString(),
+            },
+          },
+        })),
+      );
+      setHasNewNotifications(false);
+    } catch (error) {
+      console.error("Failed to mark notifications as read:", error);
+    }
+  }, []);
 
   const openDrawer = useCallback(async () => {
     setDrawerOpen(true);
-    setHasNewNotifications(false);
-    await refreshNotifications({ silent: true, markSeen: true });
-  }, [refreshNotifications]);
+    await markAllRead();
+  }, [markAllRead]);
 
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
   }, []);
 
   useEffect(() => {
-    refreshNotifications({ silent: false, markSeen: true });
-
-    const intervalId = window.setInterval(() => {
-      refreshNotifications({ silent: true });
-    }, POLL_INTERVAL_MS);
+    refreshNotifications({ silent: false });
 
     return () => {
-      window.clearInterval(intervalId);
       toastTimersRef.current.forEach((timer) => clearTimeout(timer));
       toastTimersRef.current.clear();
     };
   }, [refreshNotifications]);
 
   useEffect(() => {
-    const handleForegroundNotification = (event) => {
+    const handleForegroundNotification = async (event) => {
+      console.log(
+        "[Notifications] foreground notification event",
+        event.detail,
+      );
       const detail = normalizeForegroundPayload(event.detail);
+      upsertNotificationFromPush(event.detail?.raw || event.detail);
       pushToast(detail.title, detail.body || detail.title);
-      setHasNewNotifications(true);
+      await refreshNotifications({ silent: true });
     };
 
     window.addEventListener(
@@ -151,7 +217,60 @@ export function NotificationProvider({ children }) {
         handleForegroundNotification,
       );
     };
-  }, [pushToast]);
+  }, [pushToast, refreshNotifications, upsertNotificationFromPush]);
+
+  useEffect(() => {
+    const handleServiceWorkerMessage = async (event) => {
+      if (event?.data?.type !== "FCM_BACKGROUND_MESSAGE") {
+        return;
+      }
+
+      console.log(
+        "[Notifications] service worker message received",
+        event.data,
+      );
+
+      upsertNotificationFromPush(event.data?.payload || event.data);
+
+      await refreshNotifications({ silent: true });
+    };
+
+    navigator.serviceWorker?.addEventListener(
+      "message",
+      handleServiceWorkerMessage,
+    );
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener(
+        "message",
+        handleServiceWorkerMessage,
+      );
+    };
+  }, [refreshNotifications, upsertNotificationFromPush]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log(
+          "[Notifications] visibilitychange -> visible, refreshing inbox",
+        );
+        refreshNotifications({ silent: true });
+      }
+    };
+
+    const handleWindowFocus = () => {
+      console.log("[Notifications] window focus, refreshing inbox");
+      refreshNotifications({ silent: true });
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [refreshNotifications]);
 
   const value = useMemo(
     () => ({
@@ -162,6 +281,7 @@ export function NotificationProvider({ children }) {
       hasNewNotifications,
       toasts,
       refreshNotifications,
+      markAllRead,
       openDrawer,
       closeDrawer,
       dismissToast,
@@ -174,6 +294,7 @@ export function NotificationProvider({ children }) {
       hasNewNotifications,
       toasts,
       refreshNotifications,
+      markAllRead,
       openDrawer,
       closeDrawer,
       dismissToast,

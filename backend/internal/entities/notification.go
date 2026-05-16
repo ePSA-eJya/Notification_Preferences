@@ -36,6 +36,8 @@ type Notification struct {
 	ID          uuid.UUID            `bson:"_id" json:"id"`
 	RecipientID uuid.UUID            `bson:"recipient_id" json:"recipient_id"`
 	EventID     uuid.UUID            `bson:"event_id" json:"event_id"`
+	EntityID    uuid.UUID            `bson:"entity_id" json:"entity_id"`
+	EntityType  string               `bson:"entity_type" json:"entity_type"`
 	Message     string               `bson:"message" json:"message"`
 	Channels    NotificationChannels `bson:"channels" json:"channels"`
 	CreatedAt   time.Time            `bson:"created_at" json:"created_at"`

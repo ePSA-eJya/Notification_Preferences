@@ -24,12 +24,15 @@ func NewKafkaProducer(brokerURL string, topic string) *KafkaProducer {
 
 // Publish event takes any data and publishes it to kafka
 func (p *KafkaProducer) Publish(ctx context.Context, topic string, payload interface{}) error {
+	log.Printf("[KafkaProducer] publish requested topic=%s payloadType=%T", topic, payload)
+
 	// 1. Convert the Go Map/Struct into standard JSON format
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Failed to marshal event data: %v", err)
 		return err
 	}
+	log.Printf("[KafkaProducer] marshaled payload size=%d bytes", len(jsonData))
 
 	// 2. Create the Kafka Message
 	msg := kafka.Message{
@@ -37,11 +40,13 @@ func (p *KafkaProducer) Publish(ctx context.Context, topic string, payload inter
 	}
 
 	// 3. Send the message to the Broker!
+	log.Printf("[KafkaProducer] writing message to kafka")
 	err = p.writer.WriteMessages(ctx, msg)
 	if err != nil {
 		log.Printf("Failed to write message to Kafka: %v", err)
 		return err
 	}
+	log.Printf("[KafkaProducer] publish succeeded topic=%s", topic)
 
 	return nil
 }

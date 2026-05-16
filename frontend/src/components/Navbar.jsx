@@ -3,7 +3,7 @@ import NotificationToastStack from "./NotificationToastStack.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 
 export default function Navbar({ title }) {
-  const { notifications, hasNewNotifications, openDrawer } = useNotifications();
+  const { hasNewNotifications, openDrawer } = useNotifications();
 
   return (
     <>
@@ -17,9 +17,6 @@ export default function Navbar({ title }) {
             aria-label="Open notifications"
           >
             <i className="fas fa-bell"></i>
-            <span className="navbar-notification-count">
-              {notifications.length}
-            </span>
             {hasNewNotifications && (
               <span className="navbar-notification-dot" />
             )}

@@ -73,6 +73,7 @@ func RegisterPrivateRoutes(app fiber.Router, db *mongo.Database, publisher *brok
 	route.Get("/following", userHTTPHandler.GetFollowing)
 
 	route.Get("/notifications", notifHTTPHandler.GetNotifications)
+	route.Post("/notifications/read", notifHTTPHandler.MarkAllAsRead)
 
 	route.Get("/preferences", prefHTTPHandler.GetPreferences)
 	route.Put("/preferences", prefHTTPHandler.UpdatePreferences)

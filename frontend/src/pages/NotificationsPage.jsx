@@ -4,11 +4,11 @@ import NotificationInbox from "../components/NotificationInbox.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 
 export default function NotificationsPage() {
-  const { refreshNotifications } = useNotifications();
+  const { markAllRead } = useNotifications();
 
   useEffect(() => {
-    refreshNotifications({ silent: true, markSeen: true });
-  }, [refreshNotifications]);
+    markAllRead();
+  }, [markAllRead]);
 
   return (
     <>
@@ -27,8 +27,7 @@ export default function NotificationsPage() {
 
         <NotificationInbox
           title="Notifications"
-          subtitle="Auto-updating inbox and rich push activity"
-          showRefresh={false}
+          subtitle="Rich push activity and in-app inbox"
         />
       </div>
     </>

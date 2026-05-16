@@ -55,7 +55,7 @@ func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID,
 
 	err := smtp.SendMail(s.smtpHost+":"+s.smtpPort, auth, s.email, recipientEmail, msg)
 	if err != nil {
-		log.Printf("failed to send email for notifID=%s", notifID, err)
+		log.Printf("failed to send email for notifID=%s: %v", notifID, err)
 		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusFailed, "")
 		return dbErr
 	}
@@ -65,7 +65,7 @@ func (s *DeliveryServiceImpl) SendGmail(ctx context.Context, notifID *uuid.UUID,
 	return dbErr
 }
 
-func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, deviceToken string, message string) error {
+func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, deviceToken string, message string, data map[string]string) error {
 	if deviceToken == "" {
 		log.Printf("device token is empty for notifID=%s", notifID)
 		dbErr := s.notificationRepo.UpdateStatusByID(ctx, *notifID, entities.StatusSkipped, "")
@@ -80,12 +80,14 @@ func (s *DeliveryServiceImpl) SendPush(ctx context.Context, notifID *uuid.UUID, 
 			Title: "New Notification",
 			Body:  message,
 		},
-		Data: map[string]string{
-			"notification_id": notifID.String(),
-		},
+		Data: data,
 	}
+	if messagePayload.Data == nil {
+		messagePayload.Data = map[string]string{}
+	}
+	messagePayload.Data["notification_id"] = notifID.String()
 
-	log.Printf("message %s", messagePayload)
+	log.Printf("message %+v", messagePayload)
 	if s.fcmClient == nil {
 		log.Println("FCM CLIENT IS NIL")
 		return fmt.Errorf("fcm client is nil")

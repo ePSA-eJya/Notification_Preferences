@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -109,16 +110,21 @@ func (s *FeedUsecase) LikePost(ctx context.Context, like *entities.Like) error {
 		like.ID = uuid.New()
 	}
 	like.CreatedAt = time.Now().UTC()
+	log.Printf("[FeedUsecase] LikePost called likeID=%s postID=%s userID=%s", like.ID, like.PostID, like.UserID)
 	var payload string
 	if post, err := s.feedRepo.GetPostByID(ctx, like.PostID.String()); err == nil {
 		payload = fmt.Sprintf("liked your post: '%s'", notificationExcerpt(post.Content, 60))
+		log.Printf("[FeedUsecase] LikePost resolved post content for postID=%s", like.PostID)
 	} else {
 		payload = "liked your post"
+		log.Printf("[FeedUsecase] LikePost could not resolve post content for postID=%s err=%v", like.PostID, err)
 	}
 
 	if err := s.feedRepo.SaveLike(ctx, like); err != nil {
+		log.Printf("[FeedUsecase] LikePost failed saving like likeID=%s postID=%s err=%v", like.ID, like.PostID, err)
 		return err
 	}
+	log.Printf("[FeedUsecase] LikePost saved like likeID=%s postID=%s", like.ID, like.PostID)
 
 	if s.publisher != nil {
 		event := entities.Event{
@@ -130,7 +136,14 @@ func (s *FeedUsecase) LikePost(ctx context.Context, like *entities.Like) error {
 			Payload:    payload,
 			CreatedAt:  time.Now().UTC(),
 		}
-		_ = s.publisher.Publish(ctx, s.eventTopic, event)
+		log.Printf("[FeedUsecase] LikePost publishing kafka event eventID=%s action=%s postID=%s userID=%s", event.ID, event.ActionType, event.EntityID, event.ActorID)
+		if err := s.publisher.Publish(ctx, s.eventTopic, event); err != nil {
+			log.Printf("[FeedUsecase] LikePost kafka publish failed eventID=%s err=%v", event.ID, err)
+		} else {
+			log.Printf("[FeedUsecase] LikePost kafka publish succeeded eventID=%s", event.ID)
+		}
+	} else {
+		log.Printf("[FeedUsecase] LikePost publisher is nil; no kafka event sent postID=%s userID=%s", like.PostID, like.UserID)
 	}
 	return nil
 }

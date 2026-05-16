@@ -20,6 +20,27 @@ func NewHttpNotificationHandler(repo notifRepo.NotificationRepository) *HttpNoti
 	return &HttpNotificationHandler{notifRepo: repo}
 }
 
+// POST /api/v1/notifications/read — mark the authenticated user's in-app notifications as read
+func (h *HttpNotificationHandler) MarkAllAsRead(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	userIDRaw := c.Locals("user_id")
+	if userIDRaw == nil {
+		return responses.Error(c, apperror.ErrUnauthorized)
+	}
+
+	userID, err := uuid.Parse(fmt.Sprint(userIDRaw))
+	if err != nil {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid user id")
+	}
+
+	if err := h.notifRepo.MarkAllAsRead(ctx, userID); err != nil {
+		return responses.Error(c, err)
+	}
+
+	return responses.Message(c, fiber.StatusOK, "notifications marked as read")
+}
+
 // GET /api/v1/notifications — fetch the authenticated user's notifications
 func (h *HttpNotificationHandler) GetNotifications(c *fiber.Ctx) error {
 	ctx := c.UserContext()

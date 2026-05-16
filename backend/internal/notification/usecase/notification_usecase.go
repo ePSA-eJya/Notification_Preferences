@@ -96,6 +96,8 @@ func (s *NotificationServiceImpl) CreateNotification(ctx context.Context, event 
 		ID:          uuid.New(),
 		RecipientID: recipientID,
 		EventID:     event.ID,
+		EntityID:    event.EntityID,
+		EntityType:  event.EntityType,
 		Message:     message,
 		Channels:    channel,
 		CreatedAt:   time.Now(),
@@ -136,8 +138,17 @@ func (s *NotificationServiceImpl) SendPushNotif(ctx context.Context, event *enti
 		return
 	}
 
+	data := map[string]string{
+		"notification_id": notificationID.String(),
+		"entity_id":       event.EntityID.String(),
+		"entity_type":     event.EntityType,
+		"action_type":     string(event.ActionType),
+		"message":         message,
+		"actor_id":        event.ActorID.String(),
+	}
+
 	for _, deviceToken := range deviceTokens {
-		s.deliveryService.SendPush(ctx, notificationID, deviceToken, message)
+		s.deliveryService.SendPush(ctx, notificationID, deviceToken, message, data)
 	}
 }
 
@@ -225,6 +236,10 @@ func (s *NotificationServiceImpl) ProcessEvent(ctx context.Context, event *entit
 	log.Printf("Found %d recipient(s) for %s event", len(recipients), event.ActionType)
 
 	for i, recipientID := range recipients {
+		if (event.ActionType == entities.Liked || event.ActionType == entities.Commented) && recipientID == event.ActorID {
+			log.Printf("  skipping self notification for recipient=%s action=%s", recipientID, event.ActionType)
+			continue
+		}
 		log.Printf("  Processing recipient %d/%d: %s", i+1, len(recipients), recipientID)
 
 		prefs, prefsErr := s.preferenceRepo.GetPreferenceByUserID(ctx, recipientID)

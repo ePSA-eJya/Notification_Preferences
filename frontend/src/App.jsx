@@ -17,13 +17,25 @@ import { getDeviceToken, listenMessages } from "./firebase.js";
 export default function App() {
   const { token, loading } = useAuth();
   useEffect(() => {
+    console.log("[FCM] App effect mounting listener");
+    console.log("[FCM] browser notification state", {
+      permission: Notification.permission,
+      visibilityState: document.visibilityState,
+      hasServiceWorker: "serviceWorker" in navigator,
+    });
     // getDeviceToken().then(token => {
     //   if (token) {
     //     console.log("Send this token to backend:", token);
     //   }
     // });
 
-    listenMessages();
+    const unsubscribe = listenMessages();
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
   }, []);
   if (loading) {
     return (

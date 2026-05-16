@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { feedAPI } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
-import Navbar from '../components/Navbar.jsx';
-import PostCard from '../components/PostCard.jsx';
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { feedAPI } from "../services/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import Navbar from "../components/Navbar.jsx";
+import PostCard from "../components/PostCard.jsx";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [showComposer, setShowComposer] = useState(false);
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [selectedMedia, setSelectedMedia] = useState([]);
   const [mediaPreviews, setMediaPreviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,13 +19,14 @@ export default function DashboardPage() {
   const [posting, setPosting] = useState(false);
   const fileInputRef = useRef(null);
   const latestPostIdRef = useRef(null);
+  const highlightedPostId = searchParams.get("postId");
 
   const resetComposer = () => {
-    setContent('');
+    setContent("");
     setSelectedMedia([]);
     setMediaPreviews([]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -36,7 +39,12 @@ export default function DashboardPage() {
       const nextPosts = Array.isArray(data) ? data : [];
       const nextTopPostId = nextPosts[0]?.id || null;
 
-      if (latestPostIdRef.current && nextTopPostId && nextTopPostId !== latestPostIdRef.current && !markAsSeen) {
+      if (
+        latestPostIdRef.current &&
+        nextTopPostId &&
+        nextTopPostId !== latestPostIdRef.current &&
+        !markAsSeen
+      ) {
         setShowNewPosts(true);
       }
 
@@ -47,7 +55,7 @@ export default function DashboardPage() {
         setShowNewPosts(false);
       }
     } catch (err) {
-      console.error('Failed to load feed:', err);
+      console.error("Failed to load feed:", err);
       setPosts([]);
     } finally {
       setLoading(false);
@@ -67,13 +75,29 @@ export default function DashboardPage() {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    if (!highlightedPostId) return;
+
+    const element = document.getElementById(`post-${highlightedPostId}`);
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    element.classList.add("post-card-highlight-pulse");
+
+    const timer = window.setTimeout(() => {
+      element.classList.remove("post-card-highlight-pulse");
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [highlightedPostId, posts]);
+
   const handleMediaSelect = (e) => {
     const files = Array.from(e.target.files || []);
     const validFiles = [];
 
     files.forEach((file) => {
       // Validate file type
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
         alert(`${file.name} is not a valid image or video`);
         return;
       }
@@ -89,22 +113,25 @@ export default function DashboardPage() {
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
-        setMediaPreviews(prev => [...prev, {
-          type: file.type.startsWith('image/') ? 'image' : 'video',
-          url: event.target.result,
-          filename: file.name,
-        }]);
+        setMediaPreviews((prev) => [
+          ...prev,
+          {
+            type: file.type.startsWith("image/") ? "image" : "video",
+            url: event.target.result,
+            filename: file.name,
+          },
+        ]);
       };
       reader.readAsDataURL(file);
     });
 
     setSelectedMedia((prev) => [...prev, ...validFiles]);
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const removeMedia = (index) => {
-    setSelectedMedia(prev => prev.filter((_, i) => i !== index));
-    setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+    setSelectedMedia((prev) => prev.filter((_, i) => i !== index));
+    setMediaPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleCreatePost = async (e) => {
@@ -119,8 +146,8 @@ export default function DashboardPage() {
       resetComposer();
       setShowComposer(false);
     } catch (err) {
-      console.error('Post creation failed:', err);
-      alert('Failed to create post: ' + err.message);
+      console.error("Post creation failed:", err);
+      alert("Failed to create post: " + err.message);
     } finally {
       setPosting(false);
     }
@@ -142,7 +169,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Navbar title="My Feed" />
+      <Navbar title="Feed" />
       <div className="page-container">
         {showNewPosts && (
           <button
@@ -152,7 +179,7 @@ export default function DashboardPage() {
             disabled={refreshing}
           >
             <i className="fa fa-refresh" aria-hidden="true"></i>
-            {refreshing ? 'Updating...' : 'New Posts'}
+            {refreshing ? "Updating..." : "New Posts"}
           </button>
         )}
 
@@ -164,15 +191,22 @@ export default function DashboardPage() {
           </div>
         ) : posts.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon"><i className="fas fa-newspaper"></i></div>
+            <div className="empty-state-icon">
+              <i className="fas fa-newspaper"></i>
+            </div>
             <div className="empty-state-text">
               No posts yet. Follow some users or create your first post!
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} currentUserId={user?.id} />
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={user?.id}
+                isHighlighted={post.id === highlightedPostId}
+              />
             ))}
           </div>
         )}
@@ -188,10 +222,18 @@ export default function DashboardPage() {
 
         {showComposer && (
           <div className="composer-modal-overlay" onClick={handleCloseComposer}>
-            <div className="comments-modal card composer-modal" onClick={(event) => event.stopPropagation()}>
+            <div
+              className="comments-modal card composer-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="comments-modal-header">
                 <h3>Create Post</h3>
-                <button className="btn btn-ghost btn-sm" type="button" onClick={handleCloseComposer} disabled={posting}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  type="button"
+                  onClick={handleCloseComposer}
+                  disabled={posting}
+                >
                   Close
                 </button>
               </div>
@@ -228,13 +270,20 @@ export default function DashboardPage() {
                 {mediaPreviews.length > 0 && (
                   <div className="composer-preview-grid">
                     {mediaPreviews.map((preview, index) => (
-                      <div key={`${preview.filename}-${index}`} className="composer-preview-item">
-                        {preview.type === 'image' ? (
+                      <div
+                        key={`${preview.filename}-${index}`}
+                        className="composer-preview-item"
+                      >
+                        {preview.type === "image" ? (
                           <img src={preview.url} alt="preview" />
                         ) : (
                           <video src={preview.url} />
                         )}
-                        <button type="button" className="composer-preview-remove" onClick={() => removeMedia(index)}>
+                        <button
+                          type="button"
+                          className="composer-preview-remove"
+                          onClick={() => removeMedia(index)}
+                        >
                           ✕
                         </button>
                       </div>
@@ -243,13 +292,17 @@ export default function DashboardPage() {
                 )}
 
                 <div className="composer-footer">
-                  <span className="composer-hint">You can post with text, media, or both.</span>
+                  <span className="composer-hint">
+                    You can post with text, media, or both.
+                  </span>
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={posting || (!content.trim() && selectedMedia.length === 0)}
+                    disabled={
+                      posting || (!content.trim() && selectedMedia.length === 0)
+                    }
                   >
-                    {posting ? 'Posting...' : 'Publish Post'}
+                    {posting ? "Posting..." : "Publish Post"}
                   </button>
                 </div>
               </form>

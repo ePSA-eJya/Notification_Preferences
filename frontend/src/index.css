@@ -484,6 +484,23 @@ textarea.form-input {
   transition: all var(--transition-fast);
 }
 
+.notif-item.unread {
+  border-color: rgba(224, 122, 95, 0.38);
+  background: linear-gradient(
+    180deg,
+    rgba(224, 122, 95, 0.06),
+    rgba(255, 255, 255, 1)
+  );
+}
+
+.notif-item.clickable {
+  cursor: pointer;
+}
+
+.notif-item.clickable:hover {
+  transform: translateY(-1px);
+}
+
 .notif-item:hover {
   border-color: var(--border-hover);
   background: var(--bg-card-hover);
@@ -805,6 +822,29 @@ textarea.form-input {
   gap: 4px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
+}
+
+.post-card-highlight {
+  border-color: rgba(224, 122, 95, 0.72);
+  box-shadow: 0 16px 34px rgba(224, 122, 95, 0.14);
+}
+
+.post-card-highlight-pulse {
+  animation: postHighlightPulse 1.8s ease;
+}
+
+@keyframes postHighlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 122, 95, 0.28);
+  }
+
+  60% {
+    box-shadow: 0 0 0 10px rgba(224, 122, 95, 0.06);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 122, 95, 0);
+  }
 }
 
 .post-action-btn {

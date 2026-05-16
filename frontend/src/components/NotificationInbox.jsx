@@ -1,21 +1,25 @@
+import { useNavigate } from "react-router-dom";
 import NotificationItem from "./NotificationItem.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 
 export default function NotificationInbox({
   title = "Notifications",
   subtitle = "Live updates from the app",
-  showRefresh = true,
 }) {
-  const {
-    notifications,
-    loading,
-    refreshing,
-    hasNewNotifications,
-    refreshNotifications,
-  } = useNotifications();
+  const { notifications, loading, markAllRead, closeDrawer } =
+    useNotifications();
+  const navigate = useNavigate();
 
-  const handleRefresh = async () => {
-    await refreshNotifications({ silent: false, markSeen: true });
+  const handleNotificationClick = async (notification) => {
+    await markAllRead();
+
+    if (notification.entity_type === "POST" && notification.entity_id) {
+      closeDrawer();
+      navigate(`/?postId=${notification.entity_id}`);
+      return;
+    }
+
+    closeDrawer();
   };
 
   return (
@@ -25,25 +29,6 @@ export default function NotificationInbox({
           <h2>{title}</h2>
           <p>{subtitle}</p>
         </div>
-        {showRefresh && (
-          <button
-            className="btn btn-secondary btn-sm"
-            type="button"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-          >
-            <i className="fa fa-refresh" aria-hidden="true"></i>
-          </button>
-        )}
-      </div>
-
-      <div className="notification-inbox-meta">
-        <span>
-          {hasNewNotifications
-            ? "New activity available"
-            : `${notifications.length} notifications`}
-        </span>
-        <span>{refreshing ? "Refreshing..." : "Auto-updates on"}</span>
       </div>
 
       {loading ? (
@@ -66,6 +51,8 @@ export default function NotificationInbox({
             <NotificationItem
               key={notification.id}
               notification={notification}
+              unread={!notification.channels?.in_app?.read_at}
+              onClick={() => handleNotificationClick(notification)}
             />
           ))}
         </div>

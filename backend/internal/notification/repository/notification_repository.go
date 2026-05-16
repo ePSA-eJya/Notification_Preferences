@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"Notification_Preferences/internal/entities"
 
@@ -15,6 +16,7 @@ import (
 type NotificationRepository interface {
 	Create(ctx context.Context, notification *entities.Notification) error
 	UpdateStatusByID(ctx context.Context, notifID uuid.UUID, status entities.DeliveryStatus, providerID string) error
+	MarkAllAsRead(ctx context.Context, recipientID uuid.UUID) error
 	GetByRecipientID(ctx context.Context, recipientID uuid.UUID, limit int) ([]*entities.Notification, error)
 }
 
@@ -45,6 +47,25 @@ func (r *NotificationRepositoryImpl) UpdateStatusByID(ctx context.Context, notif
 	}
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
+	return err
+}
+
+func (r *NotificationRepositoryImpl) MarkAllAsRead(ctx context.Context, recipientID uuid.UUID) error {
+	filter := bson.M{
+		"recipient_id": recipientID,
+		"$or": []bson.M{
+			{"channels.in_app.read_at": bson.M{"$exists": false}},
+			{"channels.in_app.read_at": nil},
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"channels.in_app.read_at": time.Now().UTC(),
+		},
+	}
+
+	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }
 
