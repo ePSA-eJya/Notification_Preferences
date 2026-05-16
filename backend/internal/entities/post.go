@@ -11,6 +11,7 @@ type Post struct {
 	UserID     uuid.UUID `bson:"user_id" json:"user_id"`
 	UserHandle string    `bson:"user_handle" json:"user_handle"`
 	Content    string    `bson:"content" json:"content"`
+	MediaURLs  []string  `bson:"media_urls" json:"media_urls,omitempty"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 }
 

@@ -27,6 +27,27 @@ async function request(method, path, body = null) {
   return data;
 }
 
+// Request function for multipart form data
+async function requestMultipart(method, path, formData) {
+  const headers = {};
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const opts = { method, headers, body: formData };
+
+  const res = await fetch(`${BASE_URL}${path}`, opts);
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const message = data?.message || data?.error || `Request failed (${res.status})`;
+    throw new Error(message);
+  }
+
+  return data;
+}
+
 // ===== Auth =====
 // export const authAPI = {
 //   signup: (email, password, user_handle) =>
@@ -69,8 +90,19 @@ export const feedAPI = {
   getFeed: (limit = 20, offset = 0) =>
     request('GET', `/feed?limit=${limit}&offset=${offset}`),
 
-  createPost: (content) =>
-    request('POST', '/posts', { content }),
+  createPost: (content, mediaFiles = []) => {
+    const formData = new FormData();
+    formData.append('content', content);
+    
+    // Append media files if provided
+    if (mediaFiles && mediaFiles.length > 0) {
+      mediaFiles.forEach((file) => {
+        formData.append('media', file);
+      });
+    }
+    
+    return requestMultipart('POST', '/posts', formData);
+  },
 
   likePost: (postId) =>
     request('POST', `/posts/${postId}/like`),

@@ -108,6 +108,35 @@ export default function PostCard({ post, currentUserId }) {
 
       <div className="post-content">{post.content}</div>
 
+      {/* Media Display */}
+      {post.media_urls && post.media_urls.length > 0 && (
+        <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: post.media_urls.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+          {post.media_urls.map((mediaUrl, index) => {
+            const isVideo = mediaUrl.endsWith('.mp4') || mediaUrl.endsWith('.webm') || mediaUrl.endsWith('.mov') || mediaUrl.endsWith('.avi');
+            console.log(`Rendering media ${index}:`, mediaUrl, 'isVideo:', isVideo);
+            return (
+              <div key={index} style={{ borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f0f0f0' }}>
+                {isVideo ? (
+                  <video 
+                    src={mediaUrl} 
+                    controls 
+                    onError={(e) => console.error('Video failed to load:', mediaUrl, e)}
+                    style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <img 
+                    src={mediaUrl} 
+                    alt="post media" 
+                    onError={(e) => console.error('Image failed to load:', mediaUrl, e)}
+                    style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }} 
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="post-actions">
         <button
           className={`post-action-btn ${liked ? 'active' : ''}`}

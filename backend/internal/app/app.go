@@ -35,6 +35,18 @@ func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error)
 	}
 
 	middleware.FiberMiddleware(app)
+	
+	// Create uploads directory relative to current working directory
+	uploadsDir := "uploads"
+	if err := os.MkdirAll(uploadsDir, os.ModePerm); err != nil {
+		log.Printf("Warning: Failed to create uploads directory: %v", err)
+	}
+	
+	// Serve uploads directory as static files
+	// The /uploads prefix will map to the uploads directory
+	app.Static("/uploads", uploadsDir)
+	log.Printf("Static files configured. Uploads directory: %s", uploadsDir)
+	
 	routes.RegisterPublicRoutes(app, db, publisher)
 	routes.RegisterPrivateRoutes(app, db, publisher, cfg)
 	routes.RegisterNotFoundRoute(app)
