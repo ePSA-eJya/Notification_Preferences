@@ -4,6 +4,7 @@ import (
 	"Notification_Preferences/internal/entities"
 	"context"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -63,7 +64,14 @@ func (r *MongoFeedRepository) SaveLike(ctx context.Context, like *entities.Like)
 	opts := options.Update().SetUpsert(true)
 
 	_, err := r.likeCollection.UpdateOne(ctx, filter, update, opts)
-	return err
+	log.Printf("%v", err)
+	// return err
+	likeFilter := bson.M{"_id": like.PostID}
+
+	updateLike := bson.M{"$inc": bson.M{"like_count": 1}}
+
+	_, dbErr := r.postCollection.UpdateOne(ctx, likeFilter, updateLike)
+	return dbErr
 }
 
 func (r *MongoFeedRepository) RemoveLike(ctx context.Context, postID, userID uuid.UUID) error {
@@ -75,7 +83,12 @@ func (r *MongoFeedRepository) RemoveLike(ctx context.Context, postID, userID uui
 	if result.DeletedCount == 0 {
 		return errors.New("like not found")
 	}
-	return nil
+	unlikeFilter := bson.M{"_id": postID}
+
+	update := bson.M{"$inc": bson.M{"like_count": -1}}
+
+	_, dbErr := r.postCollection.UpdateOne(ctx, unlikeFilter, update)
+	return dbErr
 }
 
 func (r *MongoFeedRepository) IsPostLikedByUser(ctx context.Context, postID, userID uuid.UUID) (bool, error) {
@@ -95,7 +108,13 @@ func (r *MongoFeedRepository) SaveComment(ctx context.Context, comment *entities
 		comment.ID = uuid.New()
 	}
 	_, err := r.commentCollection.InsertOne(ctx, comment)
-	return err
+
+	commentFilter := bson.M{"_id": comment.PostID}
+
+	update := bson.M{"$inc": bson.M{"comment_count": +1}}
+
+	_, dbErr := r.postCollection.UpdateOne(ctx, commentFilter, update)
+	return dbErr
 }
 
 func (r *MongoFeedRepository) GetCommentsByPostID(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*entities.Comment, error) {

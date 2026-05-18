@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { feedAPI } from "../services/api.js";
+import { use } from "react";
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -26,6 +27,8 @@ export default function PostCard({
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.like_count || 0);
+  const [commentCount, setCommentCount] = useState(post.comment_count || 0);
 
   useEffect(() => {
     setComments(Array.isArray(post.comments) ? post.comments : []);
@@ -66,23 +69,35 @@ export default function PostCard({
       .finally(() => setLikeLoading(false));
   }, [post.id]);
 
+  useEffect(() => {
+    setLikeCount(post.like_count || 0);
+  }, [post.like_count]);
+
+  useEffect(() => {
+    setCommentCount(post.comment_count || 0);
+  }, [post.comment_count])
+
   const handleLike = async () => {
     if (liked) {
       // Unlike
       setLiked(false);
+      setLikeCount((prev) => Math.max(prev - 1, 0));
       try {
         await feedAPI.unlikePost(post.id);
       } catch (err) {
         setLiked(true);
+        setLikeCount((prev) => prev + 1);
         console.error("Unlike failed:", err);
       }
     } else {
       // Like
       setLiked(true);
+      setLikeCount((prev) => prev + 1);
       try {
         await feedAPI.likePost(post.id);
       } catch (err) {
         setLiked(false);
+        setLikeCount((prev) => Math.max(prev - 1, 0));
         console.error("Like failed:", err);
       }
     }
@@ -94,6 +109,7 @@ export default function PostCard({
     const text = commentText.trim();
     try {
       await feedAPI.commentOnPost(post.id, text);
+      setCommentCount((prev) => prev + 1);
       const data = await feedAPI.getPostComments(post.id);
       setComments(Array.isArray(data?.comments) ? data.comments : []);
       setCommentText("");
@@ -209,7 +225,7 @@ export default function PostCard({
               aria-hidden="true"
             ></i>
           )}{" "}
-          {liked ? "Unlike" : "Like"}
+          {liked ? "Unlike" : "Like"}{likeCount > 0 ? `(${likeCount})` : ""}
         </button>
         <button
           className="post-action-btn"
@@ -220,7 +236,7 @@ export default function PostCard({
             style={{ color: "#6f6c6cff" }}
             aria-hidden="true"
           ></i>
-          Comments {comments.length > 0 ? `(${comments.length})` : ""}
+          Comments {commentCount > 0 ? `(${commentCount})` : ""}
         </button>
       </div>
 
