@@ -4,7 +4,7 @@ import (
 	"Notification_Preferences/internal/entities"
 	"context"
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +17,7 @@ type MongoFeedRepository struct {
 	likeCollection    *mongo.Collection
 	commentCollection *mongo.Collection
 	feedCollection    *mongo.Collection
+	client            *mongo.Client
 }
 
 func NewMongoFeedRepository(db *mongo.Database) FeedRepository {
@@ -25,6 +26,7 @@ func NewMongoFeedRepository(db *mongo.Database) FeedRepository {
 		likeCollection:    db.Collection("likes"),
 		commentCollection: db.Collection("comments"),
 		feedCollection:    db.Collection("feeds"),
+		client:            db.Client(),
 	}
 }
 
@@ -58,37 +60,62 @@ func (r *MongoFeedRepository) SaveLike(ctx context.Context, like *entities.Like)
 	if like.ID == uuid.Nil {
 		like.ID = uuid.New()
 	}
-	filter := bson.M{"post_id": like.PostID, "user_id": like.UserID}
-	// Use upsert to ensure idempotency: only insert if not exists
-	update := bson.M{"$setOnInsert": like}
-	opts := options.Update().SetUpsert(true)
 
-	_, err := r.likeCollection.UpdateOne(ctx, filter, update, opts)
-	log.Printf("%v", err)
-	// return err
-	likeFilter := bson.M{"_id": like.PostID}
+	session, err := r.client.StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start mongo session: %w", err)
+	}
+	defer session.EndSession(ctx)
 
-	updateLike := bson.M{"$inc": bson.M{"like_count": 1}}
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 
-	_, dbErr := r.postCollection.UpdateOne(ctx, likeFilter, updateLike)
-	return dbErr
+		filter := bson.M{"post_id": like.PostID, "user_id": like.UserID}
+		// Use upsert to ensure idempotency: only insert if not exists
+		update := bson.M{"$setOnInsert": like}
+		opts := options.Update().SetUpsert(true)
+		_, err := r.likeCollection.UpdateOne(sessCtx, filter, update, opts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to save like: %w", err)
+		}
+
+		likeFilter := bson.M{"_id": like.PostID}
+		updateLike := bson.M{"$inc": bson.M{"like_count": 1}}
+		_, dbErr := r.postCollection.UpdateOne(sessCtx, likeFilter, updateLike)
+		if dbErr != nil {
+			return nil, fmt.Errorf("failed to update like count: %w", err)
+		}
+
+		return nil, nil
+	})
+	return err
 }
 
 func (r *MongoFeedRepository) RemoveLike(ctx context.Context, postID, userID uuid.UUID) error {
-	filter := bson.M{"post_id": postID, "user_id": userID}
-	result, err := r.likeCollection.DeleteOne(ctx, filter)
+	session, err := r.client.StartSession()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start mongo session: %w", err)
 	}
-	if result.DeletedCount == 0 {
-		return errors.New("like not found")
-	}
-	unlikeFilter := bson.M{"_id": postID}
+	defer session.EndSession(ctx)
 
-	update := bson.M{"$inc": bson.M{"like_count": -1}}
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		filter := bson.M{"post_id": postID, "user_id": userID}
+		result, err := r.likeCollection.DeleteOne(ctx, filter)
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove like: %w", err)
+		}
+		if result.DeletedCount == 0 {
+			return nil, errors.New("like not found")
+		}
 
-	_, dbErr := r.postCollection.UpdateOne(ctx, unlikeFilter, update)
-	return dbErr
+		unlikeFilter := bson.M{"_id": postID}
+		update := bson.M{"$inc": bson.M{"like_count": -1}}
+		_, dbErr := r.postCollection.UpdateOne(ctx, unlikeFilter, update)
+		if dbErr != nil {
+			return nil, fmt.Errorf("failed to update like count: %w", err)
+		}
+		return nil, nil
+	})
+	return err
 }
 
 func (r *MongoFeedRepository) IsPostLikedByUser(ctx context.Context, postID, userID uuid.UUID) (bool, error) {
@@ -107,14 +134,32 @@ func (r *MongoFeedRepository) SaveComment(ctx context.Context, comment *entities
 	if comment.ID == uuid.Nil {
 		comment.ID = uuid.New()
 	}
-	_, err := r.commentCollection.InsertOne(ctx, comment)
 
-	commentFilter := bson.M{"_id": comment.PostID}
+	session, err := r.client.StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start mongo session: %w", err)
+	}
+	defer session.EndSession(ctx)
 
-	update := bson.M{"$inc": bson.M{"comment_count": +1}}
+	//execute with transaction
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		_, err := r.commentCollection.InsertOne(sessCtx, comment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to insert comment: %w", err)
+		}
 
-	_, dbErr := r.postCollection.UpdateOne(ctx, commentFilter, update)
-	return dbErr
+		commentFilter := bson.M{"_id": comment.PostID}
+		update := bson.M{"$inc": bson.M{"comment_count": 1}}
+
+		_, dbErr := r.postCollection.UpdateOne(sessCtx, commentFilter, update)
+		if dbErr != nil {
+			return nil, fmt.Errorf("failed to update post comment count: %w", err)
+		}
+
+		return nil, nil
+	})
+
+	return err
 }
 
 func (r *MongoFeedRepository) GetCommentsByPostID(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*entities.Comment, error) {
